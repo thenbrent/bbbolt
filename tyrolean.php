@@ -155,11 +155,11 @@ class Tyrolean_Client {
 	function print_styles() { ?>
 		<style>
 		#ty_support_slider{
-			position: fixed;
-			right:-455px;
-			top: 0;
 			height: 100%;
-			width:455px;
+			width:460px;
+			position: fixed;
+			right:-460px;
+			top: 0;
 		}
 		#ty_support_slider #ty_support_toggle{
 			position: relative;
@@ -175,11 +175,14 @@ class Tyrolean_Client {
 		#ty_support_slider #ty_support_form {
 			background: #efefef;
 			border: 1px solid #ccc;
-			width:440px;
 			height: 100%;
+			padding: 10px;
 			position: relative;
 			top:0;
-			left:15px;
+			left:0;
+			-moz-box-shadow:inset 2px -2px 5px #AAA;
+			-webkit-box-shadow:inset 2px -2px 5px #AAA;
+			box-shadow:inset 2px -2px 5px #AAA;
 		}
 		</style>
 	<?php
