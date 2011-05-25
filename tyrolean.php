@@ -141,7 +141,7 @@ class Tyrolean_Client {
 	 **/
 	function support_form_slider() { ?>
 		<div id="ty_support_slider">
-			<div id="ty_support_toggle"></div>
+			<div id="ty_support_toggle"><a href="#"><?php _e( "Don't Panic", 'tyrolean' ); ?></a></div>
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
@@ -154,42 +154,49 @@ class Tyrolean_Client {
 	 **/
 	function print_styles() { ?>
 		<style>
-		#ty_support_slider{
+		#ty_support_slider {
 			height: 100%;
 			width:460px;
 			position: fixed;
 			right:-460px;
 			top: 0;
 		}
-		#ty_support_slider #ty_support_toggle{
+		#ty_support_slider #ty_support_toggle {
 			position: relative;
-			left: -15px;
+			left: -50px;
 			top: 50%;
-			width: 15px;
-			height: 30px;
+			width: 70px;
+			height: 1.5em;
 			background: #c4f500;
+			padding: 2px 6px;
 			-moz-box-shadow: 0px 0px 6px #888;
 			-webkit-box-shadow: 0px 0px 6px #888;
 			box-shadow: 0px 0px 6px #888;
+			-webkit-transform: rotate(-90deg);
+			-moz-transform: rotate(-90deg);
+			filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+		}
+		#ty_support_slider #ty_support_toggle a {
+			text-decoration: none;
 		}
 		#ty_support_slider #ty_support_form {
 			background: #efefef;
-			border: 1px solid #ccc;
+			border: 1px solid #aaa;
 			height: 100%;
 			padding: 10px;
 			position: relative;
 			top:0;
 			left:0;
-			-moz-box-shadow:inset 2px -2px 5px #AAA;
-			-webkit-box-shadow:inset 2px -2px 5px #AAA;
-			box-shadow:inset 2px -2px 5px #AAA;
+			-moz-box-shadow:inset 2px 0px 5px #aaa;
+			-webkit-box-shadow:inset 2px 0px 5px #aaa;
+			box-shadow:inset 2px 0px 5px #aaa;
 		}
 		</style>
 	<?php
 	}
 
 	/**
-	 * 
+	 * Javascript included in the admin footer to make the Tyrolean support slider more dynamic.
 	 **/
 	function print_scripts() { ?>
 		<script>
