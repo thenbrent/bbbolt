@@ -15,7 +15,7 @@ if( ! defined( 'TYROLEAN_PLUGIN_URL' ) )
 	define( 'TYROLEAN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 
-function register_tyrolean_server( $forums_urls, $args = array() ){
+function register_tyrolean_server( $args = array() ){
 
 	if( empty( $forums_urls ) )
 		$forums_urls = get_site_url();
@@ -37,8 +37,8 @@ add_action( 'init', 'register_tyrolean_server' );
  *
  *
  **/
-function register_tyrolean_client( $forums_urls, $args = array() ){
-	$tyrolean_client = new Tyrolean_Client( $forums_urls, $args );
+function register_tyrolean_client( $args = array() ){
+	$tyrolean_client = new Tyrolean_Client( $args );
 }
 
 class Tyrolean_Server {
@@ -46,9 +46,9 @@ class Tyrolean_Server {
 	private $forums_url;
 	private $tyrolean_client;
 
-	function __construct( $forums_url, $args = array() ){
+	function __construct( $args = array() ){
 
-		$this->forums_url = $forums_url;
+		$this->forums_url = $args['forums_url'];
 
 		//$this->tyrolean_client = new Tyrolean_Client( $this->forums_url );
 
@@ -110,9 +110,9 @@ class Tyrolean_Client {
 	private $forums_url;
 	private $forums_form_url;
 
-	function __construct( $forums_location, $args = array() ){
+	function __construct( $args = array() ){
 
-		$this->forums_url 	   = $forums_location;
+		$this->forums_url      = $args['forums_url'];
 		$this->forums_form_url = $this->forums_url . 'tyrolean/098234098234/';
 		//add_action( 'admin_footer', 'ty_support_form' );
 		add_action( 'admin_menu', array( &$this, 'add_menu_page' ) );

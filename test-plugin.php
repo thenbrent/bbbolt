@@ -16,9 +16,11 @@ require_once( 'tyrolean.php' );
 //$tyrolean_client = new Tyrolean_Client( 'http://localhost.localdomain/wp31/' );
 
 
-function test_register_tyrolean_client(){
+function tp_register_tyrolean_client(){
 	if( function_exists( 'register_tyrolean_client' ) ){
-		register_tyrolean_client( 'http://localhost.localdomain/wp31/' );
+		$args = array( 'forums_url' => 'http://localhost.localdomain/wp31/' );
+		
+		register_tyrolean_client( $args );
 	}	
 }
-add_action( 'init', 'test_register_tyrolean_client' );
+add_action( 'init', 'tp_register_tyrolean_client' );
