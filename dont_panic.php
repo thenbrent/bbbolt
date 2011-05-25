@@ -26,7 +26,7 @@ global $forums_url, $forums_form_url;
 							if ( bbp_is_topic_edit() )
 								printf( __( 'Edit topic "%s"', 'bbpress' ), bbp_get_topic_title() );
 							else
-								bbp_is_forum() ? printf( __( 'Post new topic in: &ldquo;%s&rdquo;', 'tyrolean' ), bbp_get_forum_title() ) : _e( 'Create new topic', 'tyrolean' );
+								bbp_is_forum() ? printf( __( 'Post new topic in: &ldquo;%s&rdquo;', 'tyrolean' ), bbp_get_forum_title() ) : _e( 'New ticket', 'tyrolean' );
 						?>
 					</legend>
 
@@ -44,13 +44,6 @@ global $forums_url, $forums_form_url;
 							</p>
 						<?php endif; ?>
 
-						<?php if ( current_user_can( 'moderate' ) ) : ?>
-							<p>
-								<label for="bbp_stick_topic"><?php _e( 'Topic Type:', 'tyrolean' ); ?></label><br />
-								<?php bbp_topic_type_select(); ?>
-							</p>
-						<?php endif; ?>
-
 						<?php bbp_get_template_part( 'bbpress/form', 'anonymous' ); ?>
 
 						<p>
@@ -63,14 +56,9 @@ global $forums_url, $forums_form_url;
 							<textarea id="bbp_topic_content" tabindex="<?php bbp_tab_index(); ?>" name="bbp_topic_content" cols="51" rows="6"><?php bbp_form_topic_content(); ?></textarea>
 						</p>
 
-						<p class="form-allowed-tags">
-							<label><?php _e( 'You may use these <abbr title="HyperText Markup Language">HTML</abbr> tags and attributes:','tyrolean' ); ?></label><br />
-							<code><?php bbp_allowed_tags(); ?></code>
-						</p>
-
 						<?php if ( !bbp_is_topic_edit() ) : ?>
 							<p>
-								<label for="bbp_topic_tags"><?php _e( 'Topic Tags:', 'tyrolean' ); ?></label><br />
+								<label for="bbp_topic_tags"><?php _e( 'Tags:', 'tyrolean' ); ?></label><br />
 								<input type="text" value="<?php bbp_form_topic_tags(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_tags" id="bbp_topic_tags" />
 							</p>
 						<?php endif; ?>
@@ -79,9 +67,9 @@ global $forums_url, $forums_form_url;
 							<p>
 								<input name="bbp_topic_subscription" id="bbp_topic_subscription" type="checkbox" value="bbp_subscribe" <?php bbp_form_topic_subscribed(); ?> tabindex="<?php bbp_tab_index(); ?>" />
 								<?php if ( bbp_is_topic_edit() && ( $post->post_author != bbp_get_current_user_id() ) ) : ?>
-									<label for="bbp_topic_subscription"><?php _e( 'Notify the author of follow-up replies via email', 'tyrolean' ); ?></label>
+									<label for="bbp_topic_subscription"><?php _e( 'Notify the author of replies via email', 'tyrolean' ); ?></label>
 								<?php else : ?>
-									<label for="bbp_topic_subscription"><?php _e( 'Notify me of follow-up replies via email', 'tyrolean' ); ?></label>
+									<label for="bbp_topic_subscription"><?php _e( 'Notify me of replies via email', 'tyrolean' ); ?></label>
 								<?php endif; ?>
 							</p>
 						<?php endif; ?>
