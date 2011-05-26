@@ -1,10 +1,5 @@
 <?php
 
-//require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/wp-load.php');
-//require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/wp-blog-header.php');
-
-global $forums_url, $forums_form_url;
-
 /**
  * New/Edit Topic
  *
