@@ -14,15 +14,12 @@
 
 <body <?php body_class(); ?>>
 
-
 <?php if( ! is_user_logged_in() ) : ?>
 
-<h1>You must login to request support</h1>
-<iframe id="tyrolean_login" name="tyrolean_login" src="<?php echo wp_login_url(); ?>" width="100%" height="550px">
-	<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
-</iframe>
+<h3>You must login</h3>
+<?php wp_login_form( array( 'redirect' => site_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
 
-<?php else : // User is logged in ?>
+<?php else : // End user is not logged in ?>
 
 <h3><?php _e( "Don't Panic", "tyrolean") ?></h3>
 
