@@ -42,37 +42,51 @@ function register_tyrolean_client( $args = array() ){
 
 class Tyrolean_Server {
 
-	private $forums_url;
+	private $tyrolean_url;
 	private $tyrolean_client;
 
 	function __construct( $args = array() ){
 
-		$this->forums_url = $args['forums_url'];
+		$this->site_url     = $args['forums_url'];
+		$this->tyrolean_url = $args['forums_url'] . 'tyrolean/';
 
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
 		add_action( 'init', array( &$this, 'flush_rules' ) );
 		add_action( 'generate_rewrite_rules', array( &$this, 'rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
+		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
+	}
+
+	/**
+	 * Because we are hijacking the WordPress template system and delivering our own
+	 * template, WordPress thinks it is a 404 request. This function tells WordPress
+	 * to tell the end user that if the request if for tyrolean, it is not a 404.
+	 **/
+	function unset_404( $status_header, $header, $text, $protocol ) {
+		global $wp_query;
+
+		if( 'tyrolean' == get_query_var( 'pagename' ) )
+			$status_header = "$protocol 200 OK";
+
+		return $status_header;
 	}
 
 	function request_handler(){
 		global $wp_query;
 
 		if( 'tyrolean' == get_query_var( 'pagename' ) ) {
-			require_once( plugin_dir_path( __FILE__ ) . '/dont-panic.php' );
+			require_once( dirname( __FILE__ ) . '/dont-panic.php' );
 			exit;
 		}
 	}
 
-
 	/**
-	 * rewrite rules.
+	 * Rewrite rules.
 	 **/
 	function rewrite_rules( $wp_rewrite ) {
-		$new_rules = array( 'tyrolean/(.+)' => 'index.php?tyrolean=' . $wp_rewrite->preg_index(1) );
+		$new_rules = array( 'tyrolean/(.*)' => 'index.php?tyrolean=' . $wp_rewrite->preg_index(1) );
 		$wp_rewrite->rules = $new_rules + $wp_rewrite->rules;
-		error_log( '$wp_rewrite->rules = ' . print_r( $wp_rewrite->rules, true ) );
 	}
 
 
@@ -81,10 +95,8 @@ class Tyrolean_Server {
 	 **/
 	function flush_rules() {
 		$rules = get_option( 'rewrite_rules' );
-		//error_log( '$rules = ' . print_r( $rules, true ) );
 
 		if ( ! isset( $rules['tyrolean/(.+)'] ) ) {
-			error_log( 'flushing rules' );
 			global $wp_rewrite;
 			$wp_rewrite->flush_rules();
 		}
@@ -102,13 +114,11 @@ class Tyrolean_Server {
 
 class Tyrolean_Client {
 
-	private $forums_url;
-	private $forums_form_url;
+	private $tyrolean_url;
 
 	function __construct( $args = array() ){
 
-		$this->forums_url      = $args['forums_url'];
-		$this->forums_form_url = $this->forums_url . 'tyrolean/';
+		$this->tyrolean_url = $args['forums_url'] . 'tyrolean/';
 
 		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
 		add_action( 'admin_footer', array( &$this, 'print_scripts' ) );
@@ -123,7 +133,7 @@ class Tyrolean_Client {
 	function support_form(){
 		?>
 		<div id="ty_support_form">
-			<iframe src="<?php echo $this->forums_form_url; ?>" width="100%" height="700">
+			<iframe  id="tyrolean_frame" src="<?php echo $this->tyrolean_url; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
 		</div>
@@ -158,7 +168,7 @@ class Tyrolean_Client {
 		}
 
 		#ty_support_slider #ty_support_toggle {
-			background: #E9E9E9;
+			background: #ECECEC;
 			border: 1px solid #CCC;
 			width: 10px;
 			height: 30px;
@@ -185,7 +195,7 @@ class Tyrolean_Client {
 		}
 
 		#ty_support_slider #ty_support_form {
-			background: #E9E9E9;
+			background: #ECECEC;
 			border: 1px solid #CCC;
 			height: 100%;
 			padding: 10px;

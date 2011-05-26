@@ -3,10 +3,26 @@
 /**
  * New/Edit Topic
  *
- * @package bbPress
- * @subpackage Theme
+ * @package Tyrolean
  */
-?>
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>" />
+<title><?php bloginfo( 'name' ); ?></title>
+</head>
+
+<body <?php body_class(); ?>>
+
+
+<?php if( ! is_user_logged_in() ) : ?>
+
+<h1>You must login to request support</h1>
+<iframe id="tyrolean_login" src="<?php echo wp_login_url(); ?>" width="100%" height="550px">
+	<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
+</iframe>
+
+<?php else : // User is logged in ?>
 
 <h3><?php _e( "Don't Panic", "tyrolean") ?></h3>
 
@@ -16,7 +32,7 @@
 
 		<div id="new-topic-<?php bbp_topic_id(); ?>" class="bbp-topic-form">
 
-			<form id="new_post" name="new_post" method="post" action="<?php echo $forums_form_url ?>">
+			<form id="new_post" name="new_post" method="post" action="">
 				<fieldset>
 					<legend>
 						<?php
@@ -119,3 +135,8 @@
 
 
 <?php endif; ?>
+
+<?php endif; // User is logged in  ?>
+
+</body>
+</html>
