@@ -204,7 +204,7 @@ class Tyrolean_Client {
 
 	function support_form(){
 		global $tyrolean_clients;
-		error_log( 'in support_form tyrolean_clients = ' . print_r( $tyrolean_clients, true ) );
+
 		$iframe_src = $this->tyrolean_url;
 		?>
 		<div id="ty_support_form">
@@ -335,6 +335,5 @@ class Tyrolean_Client {
 function register_tyrolean_client( $name, $args = array() ){
 	global $tyrolean_clients;
 
-	error_log( 'in register_tyrolean_client, tyrolean_clients = ' . print_r( $tyrolean_clients, true ) );
 	$tyrolean_clients[] = new Tyrolean_Client( $name, $args );
 }
