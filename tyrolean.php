@@ -127,7 +127,6 @@ class Tyrolean_Client {
 	function support_form(){
 		?>
 		<div id="ty_support_form">
-			<h3><?php _e( "Don't Panic", "tyrolean") ?></h3>
 			<iframe src="<?php echo $this->forums_form_url; ?>" width="100%" height="700">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
@@ -141,7 +140,7 @@ class Tyrolean_Client {
 	 **/
 	function support_form_slider() { ?>
 		<div id="ty_support_slider">
-			<div id="ty_support_toggle"><a href="#"><?php _e( "Don't Panic", 'tyrolean' ); ?></a></div>
+			<div id="ty_support_toggle"><a href="#"><</a></div>
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
@@ -161,35 +160,46 @@ class Tyrolean_Client {
 			right:-460px;
 			top: 0;
 		}
+
 		#ty_support_slider #ty_support_toggle {
+			background: #E9E9E9;
+			border: 1px solid #CCC;
+			width: 10px;
+			height: 30px;
+			float: left;
 			position: relative;
-			left: -50px;
+			left: -13px;
 			top: 50%;
-			width: 70px;
-			height: 1.5em;
-			background: #c4f500;
-			padding: 2px 6px;
-			-moz-box-shadow: 0px 0px 6px #888;
-			-webkit-box-shadow: 0px 0px 6px #888;
-			box-shadow: 0px 0px 6px #888;
-			-webkit-transform: rotate(-90deg);
-			-moz-transform: rotate(-90deg);
-			filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+			padding: 15px 0px 0px 2px;
+			-webkit-border-top-left-radius: 6px;
+			-webkit-border-bottom-left-radius: 6px;
+			-moz-border-radius-topleft: 6px;
+			-moz-border-radius-bottomleft: 6px;
+			border-top-left-radius: 6px;
+			border-bottom-left-radius: 6px;
+			box-shadow: 0px 0px 5px #AAA;
+			-moz-box-shadow: 0px 0px 5px #AAA;
+			-webkit-box-shadow: 0px 0px 5px #AAA;
+			z-index: 51;
 		}
+
 		#ty_support_slider #ty_support_toggle a {
+			font-weight: bold;
 			text-decoration: none;
 		}
+
 		#ty_support_slider #ty_support_form {
-			background: #efefef;
-			border: 1px solid #aaa;
+			background: #E9E9E9;
+			border: 1px solid #CCC;
 			height: 100%;
 			padding: 10px;
 			position: relative;
 			top:0;
 			left:0;
-			-moz-box-shadow:inset 2px 0px 5px #aaa;
-			-webkit-box-shadow:inset 2px 0px 5px #aaa;
-			box-shadow:inset 2px 0px 5px #aaa;
+			-moz-box-shadow:inset 2px 0px 5px #CCC;
+			-webkit-box-shadow:inset 2px 0px 5px #CCC;
+			box-shadow:inset 2px 0px 5px #CCC;
+			z-index: 50;
 		}
 		</style>
 	<?php
@@ -204,6 +214,7 @@ class Tyrolean_Client {
 			$('#ty_support_slider #ty_support_toggle').click(function() {
 				var $righty = $('#ty_support_slider');
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
+				$('#ty_support_toggle a').text() == '<' ? $('#ty_support_toggle a').text('>') : $('#ty_support_toggle a').text('<');
 			});
 		});
 		</script>
