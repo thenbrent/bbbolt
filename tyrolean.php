@@ -104,7 +104,6 @@ class Tyrolean_Server {
 }
 
 
-
 class Tyrolean_Client {
 
 	private $forums_url;
@@ -114,7 +113,10 @@ class Tyrolean_Client {
 
 		$this->forums_url      = $args['forums_url'];
 		$this->forums_form_url = $this->forums_url . 'tyrolean/098234098234/';
-		//add_action( 'admin_footer', 'ty_support_form' );
+
+		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
+		add_action( 'admin_footer', array( &$this, 'print_scripts' ) );
+		add_action( 'admin_print_styles', array( &$this, 'print_styles' ) );
 		add_action( 'admin_menu', array( &$this, 'add_menu_page' ) );
 	}
 
@@ -130,7 +132,81 @@ class Tyrolean_Client {
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
 		</div>
+	<?php
+	}
 
+	/**
+	 * Define the extra markup required to create a slider on every page of the 
+	 * WordPress Administration.
+	 **/
+	function support_form_slider() { ?>
+		<div id="ty_support_slider">
+			<div id="ty_support_toggle"><a href="#"><?php _e( "Don't Panic", 'tyrolean' ); ?></a></div>
+			<?php $this->support_form(); ?>
+		</div>
+	<?php
+	}
+
+	/**
+	 * To display the form in an aesthetic, usable way, we need to apply custom styles. 
+	 * 
+	 * This function is hooked to the admin header where it enqueues styles for Tyrolean.
+	 **/
+	function print_styles() { ?>
+		<style>
+		#ty_support_slider {
+			height: 100%;
+			width:460px;
+			position: fixed;
+			right:-460px;
+			top: 0;
+		}
+		#ty_support_slider #ty_support_toggle {
+			position: relative;
+			left: -50px;
+			top: 50%;
+			width: 70px;
+			height: 1.5em;
+			background: #c4f500;
+			padding: 2px 6px;
+			-moz-box-shadow: 0px 0px 6px #888;
+			-webkit-box-shadow: 0px 0px 6px #888;
+			box-shadow: 0px 0px 6px #888;
+			-webkit-transform: rotate(-90deg);
+			-moz-transform: rotate(-90deg);
+			filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+		}
+		#ty_support_slider #ty_support_toggle a {
+			text-decoration: none;
+		}
+		#ty_support_slider #ty_support_form {
+			background: #efefef;
+			border: 1px solid #aaa;
+			height: 100%;
+			padding: 10px;
+			position: relative;
+			top:0;
+			left:0;
+			-moz-box-shadow:inset 2px 0px 5px #aaa;
+			-webkit-box-shadow:inset 2px 0px 5px #aaa;
+			box-shadow:inset 2px 0px 5px #aaa;
+		}
+		</style>
+	<?php
+	}
+
+	/**
+	 * Javascript included in the admin footer to make the Tyrolean support slider more dynamic.
+	 **/
+	function print_scripts() { ?>
+		<script>
+		jQuery(document).ready(function($) {
+			$('#ty_support_slider #ty_support_toggle').click(function() {
+				var $righty = $('#ty_support_slider');
+				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
+			});
+		});
+		</script>
 	<?php
 	}
 }
