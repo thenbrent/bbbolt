@@ -108,7 +108,7 @@ class Tyrolean_Client {
 	function __construct( $args = array() ){
 
 		$this->forums_url      = $args['forums_url'];
-		$this->forums_form_url = $this->forums_url . 'tyrolean/098234098234/';
+		$this->forums_form_url = $this->forums_url . 'tyrolean/';
 
 		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
 		add_action( 'admin_footer', array( &$this, 'print_scripts' ) );
