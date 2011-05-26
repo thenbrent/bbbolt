@@ -19,7 +19,7 @@ require_once( 'tyrolean.php' );
 function tp_register_tyrolean_client(){
 	if( function_exists( 'register_tyrolean_client' ) ){
 		$args = array( 'forums_url' => 'http://localhost.localdomain/wp31/' );
-		
+
 		register_tyrolean_client( $args );
 	}	
 }

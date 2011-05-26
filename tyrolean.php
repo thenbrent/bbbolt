@@ -17,10 +17,10 @@ if( ! defined( 'TYROLEAN_PLUGIN_URL' ) )
 
 function register_tyrolean_server( $args = array() ){
 
-	if( empty( $forums_urls ) )
-		$forums_urls = get_site_url();
+	if( empty( $args['forums_url'] ) )
+		$args['forums_url'] = get_site_url();
 
-	$tyrolean_server = new Tyrolean_Server( $forums_urls, $args );
+	$tyrolean_server = new Tyrolean_Server( $args );
 }
 add_action( 'init', 'register_tyrolean_server' );
 
@@ -28,18 +28,17 @@ add_action( 'init', 'register_tyrolean_server' );
  * Register a Tyrolean client. Do not use before init.
  *
  * A function for creating or modifying a tyrolean client pointing to our 
- * remote WordPress site that is running the central bbPress forums.
+ * remote WordPress site that is running the bbPress forums.
  * 
  * The function will accept an array (second optional parameter), 
  * along with a string for the URL of the site running bbPress.
  *
  * Optional $args contents:
- *
- *
  **/
 function register_tyrolean_client( $args = array() ){
 	$tyrolean_client = new Tyrolean_Client( $args );
 }
+
 
 class Tyrolean_Server {
 
@@ -59,11 +58,10 @@ class Tyrolean_Server {
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 	}
 
-
 	function request_handler(){
 		global $wp_query;
 		if( 'tyrolean' == get_query_var( 'pagename' ) || $id = get_query_var( 'tyrolean' ) ) {
-			require_once( plugin_dir_path( __FILE__ ) . '/dont_panic.php' );
+			require_once( plugin_dir_path( __FILE__ ) . '/dont-panic.php' );
 			exit;
 		}
 	}
@@ -75,7 +73,7 @@ class Tyrolean_Server {
 	function rewrite_rules( $wp_rewrite ) {
 		$new_rules = array( 'tyrolean/(.+)' => 'index.php?tyrolean=' . $wp_rewrite->preg_index(1) );
 		$wp_rewrite->rules = $new_rules + $wp_rewrite->rules;
-		//error_log( '$wp_rewrite->rules = ' . print_r( $wp_rewrite->rules, true ) );
+		error_log( '$wp_rewrite->rules = ' . print_r( $wp_rewrite->rules, true ) );
 	}
 
 
@@ -100,7 +98,6 @@ class Tyrolean_Server {
 		$vars[] = 'tyrolean';
 		return $vars;
 	}
-	
 }
 
 
