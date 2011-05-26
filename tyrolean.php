@@ -25,6 +25,7 @@ add_action( 'init', 'register_tyrolean_server' );
 class Tyrolean_Server {
 
 	private $name;
+	private $internal_name;
 	private $tyrolean_url;
 	private $tyrolean_client;
 
@@ -37,7 +38,7 @@ class Tyrolean_Server {
 			$args['forums_url'] = get_site_url();
 
 		$this->name          = $name;
-		$this->internal_name = esc_url( strtolower( $name ) );
+		$this->internal_name = sanitize_key( strtolower( $name ) );
 		$this->site_url      = $args['forums_url'];
 		$this->tyrolean_url  = $args['forums_url'] . 'tyrolean/';
 
@@ -182,12 +183,13 @@ class Tyrolean_Server {
 class Tyrolean_Client {
 
 	private $name;
+	private $internal_name;
 	private $tyrolean_url;
 
 	function __construct( $name, $args = array() ){
 
 		$this->name          = $name;
-		$this->internal_name = esc_url( strtolower( $name ) );
+		$this->internal_name = sanitize_key( strtolower( $name ) );
 		$this->tyrolean_url  = $args['forums_url'] . 'tyrolean/';
 
 		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
@@ -207,7 +209,7 @@ class Tyrolean_Client {
 		?>
 		<div id="ty_support_form">
 		<?php if ( count( $tyrolean_clients ) > 1 ) : ?>
-			<?php $iframe_src = '#'; ?>
+			<?php $iframe_src = 'about:blank'; ?>
 			<p><?php _e( 'Please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
 			<fieldset id="tyrolean-client">
 			<?php foreach( $tyrolean_clients as $client ) : ?>
@@ -307,6 +309,11 @@ class Tyrolean_Client {
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
 				$('#ty_support_toggle a').text() == '<' ? $('#ty_support_toggle a').text('>') : $('#ty_support_toggle a').text('<');
 			});
+			function Navigate() {
+				var newurl = $('#ifrmSite').val();
+				$('#iframe1').attr('src', newurl);
+				window.frames["iframe1"].location.reload();
+			}
 		});
 		</script>
 	<?php
