@@ -49,8 +49,6 @@ class Tyrolean_Server {
 
 		$this->forums_url = $args['forums_url'];
 
-		//$this->tyrolean_client = new Tyrolean_Client( $this->forums_url );
-
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
 		add_action( 'init', array( &$this, 'flush_rules' ) );
@@ -60,7 +58,8 @@ class Tyrolean_Server {
 
 	function request_handler(){
 		global $wp_query;
-		if( 'tyrolean' == get_query_var( 'pagename' ) || $id = get_query_var( 'tyrolean' ) ) {
+
+		if( 'tyrolean' == get_query_var( 'pagename' ) ) {
 			require_once( plugin_dir_path( __FILE__ ) . '/dont-panic.php' );
 			exit;
 		}
