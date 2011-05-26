@@ -5,23 +5,7 @@
  *
  * @package Tyrolean
  */
-?><!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-<meta charset="<?php bloginfo( 'charset' ); ?>" />
-<title><?php bloginfo( 'name' ); ?></title>
-</head>
-
-<body <?php body_class(); ?>>
-
-<?php if( ! is_user_logged_in() ) : ?>
-
-<h3>You must login</h3>
-<?php wp_login_form( array( 'redirect' => site_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
-
-<?php else : // End user is not logged in ?>
-
-<h3><?php _e( "Don't Panic", "tyrolean") ?></h3>
+?>
 
 <?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
@@ -133,7 +117,3 @@
 
 <?php endif; ?>
 
-<?php endif; // User is logged in  ?>
-
-</body>
-</html>

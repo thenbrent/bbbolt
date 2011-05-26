@@ -13,7 +13,7 @@ function tp_register_tyrolean_client(){
 	if( function_exists( 'register_tyrolean_client' ) ){
 		$args = array( 'forums_url' => 'http://localhost.localdomain/wp31/' );
 
-		register_tyrolean_client( $args );
+		register_tyrolean_client( 'Test Plugin', $args );
 	}	
 }
 add_action( 'init', 'tp_register_tyrolean_client' );
