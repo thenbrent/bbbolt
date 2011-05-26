@@ -15,28 +15,11 @@ if( ! defined( 'TYROLEAN_PLUGIN_URL' ) )
 	define( 'TYROLEAN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 
-function register_tyrolean_server( $name, $args = array() ){
+function register_tyrolean_server( $name = '', $args = array() ){
 
-	$tyrolean_server = new Tyrolean_Server( $name, $args );
+	$tyrolean_server = new Tyrolean_Server( $name = '', $args );
 }
 add_action( 'init', 'register_tyrolean_server' );
-
-/**
- * Register a Tyrolean client. Do not use before init.
- *
- * A function for creating or modifying a tyrolean client pointing to our 
- * remote WordPress site that is running the bbPress forums.
- * 
- * The function will accept an array (second optional parameter), 
- * along with a string for the URL of the site running bbPress.
- *
- * Optional $args contents:
- **/
-function register_tyrolean_client( $name, $args = array() ){
-	global $tyrolean_clients;
-
-	$tyrolean_clients[] = new Tyrolean_Client( $name, $args );
-}
 
 
 class Tyrolean_Server {
@@ -46,6 +29,9 @@ class Tyrolean_Server {
 	private $tyrolean_client;
 
 	function __construct( $name, $args = array() ){
+
+		if( empty( $name ) )
+			$name = get_bloginfo( 'name' );;
 
 		if( empty( $args['forums_url'] ) )
 			$args['forums_url'] = get_site_url();
@@ -65,6 +51,9 @@ class Tyrolean_Server {
 
 	/**
 	 * Outputs the HTML registration form for the plugin's support page.
+	 *
+	 * Calls the same hooks as the vanilla WordPress registration form to be compatible with 
+	 * other plugins. 
 	 **/
 	function register_form() { 
 		$user_login = '';
@@ -73,7 +62,7 @@ class Tyrolean_Server {
 			$user_login = $_POST['user_login'];
 			$user_email = $_POST['user_email'];
 			$errors = register_new_user($user_login, $user_email);
-			if ( !is_wp_error($errors) ) {
+			if ( ! is_wp_error( $errors ) ) {
 				$redirect_to = !empty( $_POST['redirect_to'] ) ? $_POST['redirect_to'] : 'wp-login.php?checkemail=registered';
 				wp_safe_redirect( $redirect_to );
 				exit();
@@ -92,7 +81,6 @@ class Tyrolean_Server {
 			</p>
 			<?php do_action('register_form'); ?>
 			<p id="reg_passmail"><?php _e('A password will be e-mailed to you.') ?></p>
-			<br class="clear" />
 			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
 			<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Register'); ?>" tabindex="100" /></p>
 		</form>
@@ -102,23 +90,27 @@ class Tyrolean_Server {
 	function request_handler(){
 		global $wp_query;
 
-		if( 'tyrolean' == get_query_var( 'pagename' ) ) {
-			$this->get_header();
-			if( ! is_user_logged_in() ) { ?>
-				<h3><?php _e( 'Login', 'tyrolean' ); ?></h3>
-				<p><?php _e( 'To access the support system, you must login. If you do not have an account, you can also register.', 'tyrolean' ); ?></p>
-				<?php wp_login_form( array( 'redirect' => site_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
-				<a href="<?php echo site_url('wp-login.php?action=lostpassword', 'login') ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
+		// Don't touch non tyrolean queries
+		if( 'tyrolean' != get_query_var( 'pagename' ) )
+			return;
 
+		$this->get_header();
+		if( ! is_user_logged_in() ) { ?>
+			<h3><?php _e( 'Login', 'tyrolean' ); ?></h3>
+			<p><?php printf( __( 'To access the %s support system, you must login.', 'tyrolean' ), $this->name ); ?></p>
+			<?php wp_login_form( array( 'redirect' => site_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
+			<a href="<?php echo site_url('wp-login.php?action=lostpassword', 'login') ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
+			<?php if( get_option('users_can_register') ) : ?>
 				<h3><?php _e( 'Register', 'tyrolean' ); ?></h3>
+				<p><?php printf( __( 'If you do not yet have an account with the %s support system, signup to receive convenient support.', 'tyrolean' ), $this->name ); ?></p>
 				<?php $this->register_form();
-			} else { ?>
-				<h3><?php _e( "Don't Panic", 'tyrolean' ); ?></h3> <?php
-				require_once( dirname( __FILE__ ) . '/dont-panic.php' );
-			}
-			$this->get_footer();
-			exit;
+			endif;
+		} else { ?>
+			<h3><?php _e( "Don't Panic", 'tyrolean' ); ?></h3> <?php
+			require_once( dirname( __FILE__ ) . '/dont-panic.php' );
 		}
+		$this->get_footer();
+		exit;
 	}
 
 	/* TEMPLATE FUNCTIONS */
@@ -209,13 +201,28 @@ class Tyrolean_Client {
 	}
 
 	function support_form(){
+		global $tyrolean_clients;
+		error_log( 'in support_form tyrolean_clients = ' . print_r( $tyrolean_clients, true ) );
+		$iframe_src = $this->tyrolean_url;
 		?>
 		<div id="ty_support_form">
-			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $this->tyrolean_url; ?>" width="100%" height="100%">
+		<?php if ( count( $tyrolean_clients ) > 1 ) : ?>
+			<?php $iframe_src = '#'; ?>
+			<p><?php _e( 'Please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
+			<fieldset id="tyrolean-client">
+			<?php foreach( $tyrolean_clients as $client ) : ?>
+				<label>
+					<input type="radio" name="tyrolean_client" value="<?php echo $client->tyrolean_url; ?>" />
+					<span><?php echo $client->name; ?></span>
+				</label>
+			<?php endforeach; ?>
+			</fieldset>
+		<?php endif; ?>
+			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
 		</div>
-	<?php
+		<?php
 	}
 
 	/**
@@ -304,4 +311,23 @@ class Tyrolean_Client {
 		</script>
 	<?php
 	}
+}
+
+
+/**
+ * Register a Tyrolean client. Do not use before init.
+ *
+ * A function for creating or modifying a tyrolean client pointing to our 
+ * remote WordPress site that is running the bbPress forums.
+ * 
+ * The function will accept an array (second optional parameter), 
+ * along with a string for the URL of the site running bbPress.
+ *
+ * Optional $args contents:
+ **/
+function register_tyrolean_client( $name, $args = array() ){
+	global $tyrolean_clients;
+
+	error_log( 'in register_tyrolean_client, tyrolean_clients = ' . print_r( $tyrolean_clients, true ) );
+	$tyrolean_clients[] = new Tyrolean_Client( $name, $args );
 }
