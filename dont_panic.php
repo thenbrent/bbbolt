@@ -13,6 +13,8 @@ global $forums_url, $forums_form_url;
  */
 ?>
 
+<h3><?php _e( "Don't Panic", "tyrolean") ?></h3>
+
 <?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
 	<?php if ( ( !bbp_is_forum_category() && ( !bbp_is_forum_closed() || current_user_can( 'edit_forum', bbp_get_topic_forum_id() ) ) ) || bbp_is_topic_edit() ) : ?>
