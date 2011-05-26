@@ -133,7 +133,7 @@ class Tyrolean_Client {
 	function support_form(){
 		?>
 		<div id="ty_support_form">
-			<iframe  id="tyrolean_frame" src="<?php echo $this->tyrolean_url; ?>" width="100%" height="100%">
+			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $this->tyrolean_url; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
 		</div>

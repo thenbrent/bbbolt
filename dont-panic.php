@@ -18,7 +18,7 @@
 <?php if( ! is_user_logged_in() ) : ?>
 
 <h1>You must login to request support</h1>
-<iframe id="tyrolean_login" src="<?php echo wp_login_url(); ?>" width="100%" height="550px">
+<iframe id="tyrolean_login" name="tyrolean_login" src="<?php echo wp_login_url(); ?>" width="100%" height="550px">
 	<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 </iframe>
 
