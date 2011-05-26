@@ -211,14 +211,11 @@ class Tyrolean_Client {
 		<?php if ( count( $tyrolean_clients ) > 1 ) : ?>
 			<?php $iframe_src = 'about:blank'; ?>
 			<p><?php _e( 'Please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
-			<fieldset id="tyrolean-client">
 			<?php foreach( $tyrolean_clients as $client ) : ?>
-				<label>
-					<input type="radio" name="tyrolean_client" value="<?php echo $client->tyrolean_url; ?>" />
-					<span><?php echo $client->name; ?></span>
-				</label>
+				<a href="<?php echo $client->tyrolean_url; ?>" target="tyrolean_frame">
+					<?php echo $client->name; ?>
+				</a>
 			<?php endforeach; ?>
-			</fieldset>
 		<?php endif; ?>
 			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
@@ -309,11 +306,6 @@ class Tyrolean_Client {
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
 				$('#ty_support_toggle a').text() == '<' ? $('#ty_support_toggle a').text('>') : $('#ty_support_toggle a').text('<');
 			});
-			function Navigate() {
-				var newurl = $('#ifrmSite').val();
-				$('#iframe1').attr('src', newurl);
-				window.frames["iframe1"].location.reload();
-			}
 		});
 		</script>
 	<?php
