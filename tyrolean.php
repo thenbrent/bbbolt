@@ -186,62 +186,148 @@ class Tyrolean_Client {
 	private $internal_name;
 	private $tyrolean_url;
 
-	function __construct( $name, $args = array() ){
+	public function __construct( $name, $args = array() ){
 
 		$this->name          = $name;
 		$this->internal_name = sanitize_key( strtolower( $name ) );
 		$this->tyrolean_url  = $args['forums_url'] . 'tyrolean/';
 
+		Tyrolean_Client_UI::singleton();
+	}
+	
+	public function get_name() {
+		return $this->name;
+	}
+
+	public function get_url() {
+		return $this->tyrolean_url;
+	}
+}
+
+
+/**
+ * Tyrolean UI Singleton
+ * 
+ * Most UI functions only need to be performed once, so a singleton class is suitable and 
+ * called in the Tyrolean Client. 
+ **/
+class Tyrolean_Client_UI {
+	private static $instance;
+
+	private function __construct() {
 		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
 		add_action( 'admin_footer', array( &$this, 'print_scripts' ) );
 		add_action( 'admin_print_styles', array( &$this, 'print_styles' ) );
 		add_action( 'admin_menu', array( &$this, 'add_menu_page' ) );
 	}
 
-	function add_menu_page(){
-		add_menu_page( 'Support', 'Support', 'read', 'tyrolean', array( &$this, 'support_form' ) );
+	// The singleton method
+	public static function singleton() {
+
+		if ( ! isset( self::$instance ) ) {
+			$c = __CLASS__;
+			self::$instance = new $c;
+		}
+
+		return self::$instance;
 	}
 
-	function support_form(){
+	public function add_menu_page(){
+		global $tyrolean_admin_page;
+
+		$tyrolean_admin_page = add_menu_page( 'Support', 'Support', 'read', 'tyrolean', array( &$this, 'support_inbox' ) );
+	}
+
+	/**
+	 * 
+	 **/
+	public function support_inbox(){
 		global $tyrolean_clients;
 
-		$iframe_src = $this->tyrolean_url;
+		$columns = array(
+				'name' => 'Name',
+				'subject' => 'Subject',
+				'date' => 'Date'
+			);
+		register_column_headers( 'tyrolean-inbox', $columns );
+		?>
+		<div class="wrap">
+			<?php screen_icon( 'users' ); ?>
+			<h2><?php _e( 'Support Inbox', 'tyrolean' ); ?></h2>
+			<table class="widefat">
+				<thead>
+					<tr><?php print_column_headers( 'tyrolean-inbox' ); ?></tr>
+				</thead>
+				<tfoot>
+					<tr><?php print_column_headers( 'tyrolean-inbox', false ); ?></tr>
+				</tfoot>
+				<tbody>
+				<?php
+				global $wpdb;
+				$sql = "SELECT * FROM $wpdb->posts where 1";
+				$results = $wpdb->get_results($sql);
+				if( count( $results ) > 0 ) {
+					foreach( $results as $result ) {
+						echo "<tr>
+							<td>".$result->post_author."</td><td>".$result->post_title."</td><td>".$result->post_date."</td>
+							</tr>";
+					}				
+				}
+				?>
+			</tbody>
+		</table>
+	</div>
+
+	<?php
+	}
+
+
+	/**
+	 * Output the support form for this client (or an intermediary form if there are multiple clients.)
+	 **/
+	public function support_form(){
+		global $tyrolean_clients;
+
 		?>
 		<div id="ty_support_form">
 		<?php if ( count( $tyrolean_clients ) > 1 ) : ?>
 			<?php $iframe_src = 'about:blank'; ?>
-			<p><?php _e( 'Please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
+			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
 			<?php foreach( $tyrolean_clients as $client ) : ?>
-				<a href="<?php echo $client->tyrolean_url; ?>" target="tyrolean_frame">
-					<?php echo $client->name; ?>
-				</a>
+				<p><a href="<?php echo $client->get_url(); ?>" target="tyrolean_frame">
+					<?php echo $client->get_name(); ?>
+				</a></p>
 			<?php endforeach; ?>
+		<?php else : ?>
+		<?php $iframe_src = $tyrolean_clients[0]->tyrolean_url; ?>
 		<?php endif; ?>
-			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
+			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $iframe_src; ?>" width="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
 			</iframe>
 		</div>
 		<?php
 	}
 
+
 	/**
 	 * Define the extra markup required to create a slider on every page of the 
 	 * WordPress Administration.
 	 **/
-	function support_form_slider() { ?>
+	public function support_form_slider() { ?>
 		<div id="ty_support_slider">
-			<div id="ty_support_toggle"><a href="#"><</a></div>
+			<div id="ty_support_toggle"><a href="#">&lt;</a></div>
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
 	}
+
 
 	/**
 	 * To display the form in an aesthetic, usable way, we need to apply custom styles. 
 	 * 
 	 * This function is hooked to the admin header where it enqueues styles for Tyrolean.
 	 **/
-	function print_styles() { ?>
+	public function print_styles() { ?>
 		<style>
 		#ty_support_slider {
 			height: 100%;
@@ -295,10 +381,11 @@ class Tyrolean_Client {
 	<?php
 	}
 
+
 	/**
 	 * Javascript included in the admin footer to make the Tyrolean support slider more dynamic.
 	 **/
-	function print_scripts() { ?>
+	public function print_scripts() { ?>
 		<script>
 		jQuery(document).ready(function($) {
 			$('#ty_support_slider #ty_support_toggle').click(function() {
@@ -311,7 +398,6 @@ class Tyrolean_Client {
 	<?php
 	}
 }
-
 
 /**
  * Register a Tyrolean client. Do not use before init.
