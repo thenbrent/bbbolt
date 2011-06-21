@@ -17,3 +17,4 @@ function tp_register_bbbolt_client(){
 	}	
 }
 add_action( 'init', 'tp_register_bbbolt_client' );
+
