@@ -11,7 +11,7 @@ require_once( 'bbbolt.php' );
 
 function tp_register_bbbolt_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
-		$args = array( 'forums_url' => 'http://localhost.localdomain/wp31/' );
+		$args = array( 'forums_url' => 'http://localhost/wp31/' );
 
 		register_bbbolt_client( 'Test Plugin', $args );
 	}	
