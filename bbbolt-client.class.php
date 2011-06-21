@@ -14,7 +14,7 @@ class bbBolt_Client {
 
 		$this->name          = $name;
 		$this->internal_name = sanitize_key( strtolower( $name ) );
-		$this->bbbolt_url    = $args['forums_url'] . 'bbbolt/';
+		$this->bbbolt_url    = $args['site_url'] . 'bbbolt/';
 
 		bbBolt_Client_UI::singleton();
 	}

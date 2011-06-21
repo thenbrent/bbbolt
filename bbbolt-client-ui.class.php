@@ -136,6 +136,7 @@ class bbBolt_Client_UI {
 		#bbb_support_slider #bbb_support_toggle {
 			background: #ECECEC;
 			border: 1px solid #CCC;
+			font-family: Arial, Helvetica, Verdana, sans-serif;
 			width: 10px;
 			height: 30px;
 			float: left;

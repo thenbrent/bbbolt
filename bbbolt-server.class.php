@@ -16,20 +16,20 @@ class bbBolt_Server {
 		if( empty( $name ) )
 			$name = get_bloginfo( 'name' );;
 
-		if( empty( $args['forums_url'] ) )
-			$args['forums_url'] = get_site_url();
+		if( empty( $args['site_url'] ) )
+			$args['site_url'] = get_site_url();
 
 		$this->name               = $name;
 		$this->internal_name      = sanitize_key( strtolower( $name ) );
-		$this->site_url           = $args['forums_url'];
-		$this->bbbolt_url         = $args['forums_url'] . 'bbbolt/';
+		$this->site_url           = $args['site_url'];
+		$this->bbbolt_url         = add_query_arg( 'bbbolt', $args['site_url'] );
 		$this->registering_plugin = $args['registering_plugin'];
 
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
 		add_action( 'init', array( &$this, 'check_requirements' ), 11 );
 		add_action( 'init', array( &$this, 'flush_rules' ), 12 );
-		add_action( 'generate_rewrite_rules', array( &$this, 'rewrite_rules' ) );
+		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
 	}
@@ -92,9 +92,8 @@ class bbBolt_Server {
 	function request_handler(){
 		global $wp_query;
 
-		error_log( 'pagename = ' . get_query_var( 'pagename' ) );
 		// Don't touch non bbbolt queries
-		if( 'bbbolt' != get_query_var( 'pagename' ) )
+		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
 		$this->get_header();
@@ -138,7 +137,7 @@ class bbBolt_Server {
 	/**
 	 * Because we are hijacking the WordPress template system and delivering our own
 	 * template, WordPress thinks it is a 404 request. This function tells WordPress
-	 * to tell the end user that if the request if for bbbolt, it is not a 404.
+	 * to tell the end user that if the request is for bbbolt, it is not a 404.
 	 **/
 	function unset_404( $status_header, $header, $text, $protocol ) {
 		global $wp_query;
@@ -155,7 +154,7 @@ class bbBolt_Server {
 	/**
 	 * Rewrite rules.
 	 **/
-	function rewrite_rules( $wp_rewrite ) {
+	function add_rewrite_rules( $wp_rewrite ) {
 		$new_rules = array( 'bbbolt/(.*)' => 'index.php?bbbolt=' . $wp_rewrite->preg_index(1) );
 		$wp_rewrite->rules = $new_rules + $wp_rewrite->rules;
 	}

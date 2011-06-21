@@ -10,10 +10,10 @@ if( !function_exists( 'fetch_feed' ) )
 	require_once (ABSPATH . WPINC . '/feed.php');
 
 
-global $forums_url, $forums_feed_url, $topics_feed_url;
-$forums_url 	 = 'http://test.brentshepherd.com/forums/';
-$forums_feed_url = $forums_url . 'forum/feed';
-$topics_feed_url = $forums_url . 'topic/feed';
+global $site_url, $forums_feed_url, $topics_feed_url;
+$site_url 	 = 'http://test.brentshepherd.com/forums/';
+$forums_feed_url = $site_url . 'forum/feed';
+$topics_feed_url = $site_url . 'topic/feed';
 
 function bbb_add_menu_page(){
 	add_menu_page( 'Code Poets Society', 'Code Poets', 'read', 'bbbolt', 'bbb_feeds_page' );
