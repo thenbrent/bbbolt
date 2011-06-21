@@ -1,36 +1,36 @@
 <?php
 /*
-Plugin Name: Tyrolean
+Plugin Name: bbBolt
 Description: Super simple support for WordPress Plugin Developers. 
 Author: Brent Shepherd
 Author URI: http://find.brentshepherd.com/
 Version: pre-alpha
 */
 
-if( ! defined( 'TYROLEAN_PLUGIN_BASENAME' ) )
-	define( 'TYROLEAN_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-if( ! defined( 'TYROLEAN_PLUGIN_DIR' ) )
-	define( 'TYROLEAN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-if( ! defined( 'TYROLEAN_PLUGIN_URL' ) )
-	define( 'TYROLEAN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+if( ! defined( 'BBBOLT_PLUGIN_BASENAME' ) )
+	define( 'BBBOLT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+if( ! defined( 'BBBOLT_PLUGIN_DIR' ) )
+	define( 'BBBOLT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+if( ! defined( 'BBBOLT_PLUGIN_URL' ) )
+	define( 'BBBOLT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 
-function register_tyrolean_server( $name = '', $args = array() ){
+function register_bbbolt_server( $name = '', $args = array() ){
 
-	$tyrolean_server = new Tyrolean_Server( $name = '', $args );
+	$bbbolt_server = new bbBolt_Server( $name = '', $args );
 }
-add_action( 'init', 'register_tyrolean_server' );
+//add_action( 'init', 'register_bbbolt_server' );
 
 
-class Tyrolean_Server {
+class bbb_Server {
 
 	private $name;
 	private $internal_name;
-	private $tyrolean_url;
-	private $tyrolean_client;
+	private $bbbolt_url;
+	private $bbbolt_client;
 
 	function __construct( $name, $args = array() ){
-
+		
 		if( empty( $name ) )
 			$name = get_bloginfo( 'name' );;
 
@@ -40,7 +40,7 @@ class Tyrolean_Server {
 		$this->name          = $name;
 		$this->internal_name = sanitize_key( strtolower( $name ) );
 		$this->site_url      = $args['forums_url'];
-		$this->tyrolean_url  = $args['forums_url'] . 'tyrolean/';
+		$this->bbbolt_url    = $args['forums_url'] . 'bbbolt/';
 
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
@@ -91,23 +91,23 @@ class Tyrolean_Server {
 	function request_handler(){
 		global $wp_query;
 
-		// Don't touch non tyrolean queries
-		if( 'tyrolean' != get_query_var( 'pagename' ) )
+		// Don't touch non bbbolt queries
+		if( 'bbbolt' != get_query_var( 'pagename' ) )
 			return;
 
 		$this->get_header();
 		if( ! is_user_logged_in() ) { ?>
-			<h3><?php _e( 'Login', 'tyrolean' ); ?></h3>
-			<p><?php printf( __( 'To access the %s support system, you must login.', 'tyrolean' ), $this->name ); ?></p>
+			<h3><?php _e( 'Login', 'bbbolt' ); ?></h3>
+			<p><?php printf( __( 'To access the %s support system, you must login.', 'bbbolt' ), $this->name ); ?></p>
 			<?php wp_login_form( array( 'redirect' => site_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
 			<a href="<?php echo site_url('wp-login.php?action=lostpassword', 'login') ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
 			<?php if( get_option('users_can_register') ) : ?>
-				<h3><?php _e( 'Register', 'tyrolean' ); ?></h3>
-				<p><?php printf( __( 'If you do not yet have an account with the %s support system, signup to receive convenient support.', 'tyrolean' ), $this->name ); ?></p>
+				<h3><?php _e( 'Register', 'bbbolt' ); ?></h3>
+				<p><?php printf( __( 'If you do not yet have an account with the %s support system, signup to receive convenient support.', 'bbbolt' ), $this->name ); ?></p>
 				<?php $this->register_form();
 			endif;
 		} else { ?>
-			<h3><?php _e( "Don't Panic", 'tyrolean' ); ?></h3> <?php
+			<h3><?php _e( "Don't Panic", 'bbbolt' ); ?></h3> <?php
 			require_once( dirname( __FILE__ ) . '/dont-panic.php' );
 		}
 		$this->get_footer();
@@ -136,12 +136,12 @@ class Tyrolean_Server {
 	/**
 	 * Because we are hijacking the WordPress template system and delivering our own
 	 * template, WordPress thinks it is a 404 request. This function tells WordPress
-	 * to tell the end user that if the request if for tyrolean, it is not a 404.
+	 * to tell the end user that if the request if for bbbolt, it is not a 404.
 	 **/
 	function unset_404( $status_header, $header, $text, $protocol ) {
 		global $wp_query;
 
-		if( 'tyrolean' == get_query_var( 'pagename' ) ) {
+		if( 'bbbolt' == get_query_var( 'pagename' ) ) {
 			$status_header = "$protocol 200 OK";
 			$wp_query->is_404 = false;
 		}
@@ -153,18 +153,18 @@ class Tyrolean_Server {
 	 * Rewrite rules.
 	 **/
 	function rewrite_rules( $wp_rewrite ) {
-		$new_rules = array( 'tyrolean/(.*)' => 'index.php?tyrolean=' . $wp_rewrite->preg_index(1) );
+		$new_rules = array( 'bbbolt/(.*)' => 'index.php?bbbolt=' . $wp_rewrite->preg_index(1) );
 		$wp_rewrite->rules = $new_rules + $wp_rewrite->rules;
 	}
 
 
 	/**
-	 * Flush rewrite rules if the Tyrolean rule was not previously added.
+	 * Flush rewrite rules if the bbBolt rule was not previously added.
 	 **/
 	function flush_rules() {
 		$rules = get_option( 'rewrite_rules' );
 
-		if ( ! isset( $rules['tyrolean/(.+)'] ) ) {
+		if ( ! isset( $rules['bbbolt/(.+)'] ) ) {
 			global $wp_rewrite;
 			$wp_rewrite->flush_rules();
 		}
@@ -174,25 +174,25 @@ class Tyrolean_Server {
 	 * Add avatar query var.
 	 **/
 	function query_var( $vars ) {
-		$vars[] = 'tyrolean';
+		$vars[] = 'bbbolt';
 		return $vars;
 	}
 }
 
 
-class Tyrolean_Client {
+class bbb_Client {
 
 	private $name;
 	private $internal_name;
-	private $tyrolean_url;
+	private $bbbolt_url;
 
 	public function __construct( $name, $args = array() ){
 
 		$this->name          = $name;
 		$this->internal_name = sanitize_key( strtolower( $name ) );
-		$this->tyrolean_url  = $args['forums_url'] . 'tyrolean/';
+		$this->bbbolt_url    = $args['forums_url'] . 'bbbolt/';
 
-		Tyrolean_Client_UI::singleton();
+		bbBolt_Client_UI::singleton();
 	}
 	
 	public function get_name() {
@@ -200,18 +200,18 @@ class Tyrolean_Client {
 	}
 
 	public function get_url() {
-		return $this->tyrolean_url;
+		return $this->bbbolt_url;
 	}
 }
 
 
 /**
- * Tyrolean UI Singleton
+ * bbBolt UI Singleton
  * 
  * Most UI functions only need to be performed once, so a singleton class is suitable and 
- * called in the Tyrolean Client. 
+ * called in the bbBolt Client. 
  **/
-class Tyrolean_Client_UI {
+class bbb_Client_UI {
 	private static $instance;
 
 	private function __construct() {
@@ -233,33 +233,33 @@ class Tyrolean_Client_UI {
 	}
 
 	public function add_menu_page(){
-		global $tyrolean_admin_page;
+		global $bbbolt_admin_page;
 
-		$tyrolean_admin_page = add_menu_page( 'Support', 'Support', 'read', 'tyrolean', array( &$this, 'support_inbox' ) );
+		$bbbolt_admin_page = add_menu_page( 'Support', 'Support', 'read', 'bbbolt', array( &$this, 'support_inbox' ) );
 	}
 
 	/**
 	 * 
 	 **/
 	public function support_inbox(){
-		global $tyrolean_clients;
+		global $bbbolt_clients;
 
 		$columns = array(
 				'name' => 'Name',
 				'subject' => 'Subject',
 				'date' => 'Date'
 			);
-		register_column_headers( 'tyrolean-inbox', $columns );
+		register_column_headers( 'bbbolt-inbox', $columns );
 		?>
 		<div class="wrap">
 			<?php screen_icon( 'users' ); ?>
-			<h2><?php _e( 'Support Inbox', 'tyrolean' ); ?></h2>
+			<h2><?php _e( 'Support Inbox', 'bbbolt' ); ?></h2>
 			<table class="widefat">
 				<thead>
-					<tr><?php print_column_headers( 'tyrolean-inbox' ); ?></tr>
+					<tr><?php print_column_headers( 'bbbolt-inbox' ); ?></tr>
 				</thead>
 				<tfoot>
-					<tr><?php print_column_headers( 'tyrolean-inbox', false ); ?></tr>
+					<tr><?php print_column_headers( 'bbbolt-inbox', false ); ?></tr>
 				</tfoot>
 				<tbody>
 				<?php
@@ -286,23 +286,23 @@ class Tyrolean_Client_UI {
 	 * Output the support form for this client (or an intermediary form if there are multiple clients.)
 	 **/
 	public function support_form(){
-		global $tyrolean_clients;
+		global $bbbolt_clients;
 
 		?>
-		<div id="ty_support_form">
-		<?php if ( count( $tyrolean_clients ) > 1 ) : ?>
+		<div id="bbb_support_form">
+		<?php if ( count( $bbbolt_clients ) > 1 ) : ?>
 			<?php $iframe_src = 'about:blank'; ?>
-			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'tyrolean' ); ?></p>
-			<?php foreach( $tyrolean_clients as $client ) : ?>
-				<p><a href="<?php echo $client->get_url(); ?>" target="tyrolean_frame">
+			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
+			<?php foreach( $bbbolt_clients as $client ) : ?>
+				<p><a href="<?php echo $client->get_url(); ?>" target="bbbolt_frame">
 					<?php echo $client->get_name(); ?>
 				</a></p>
 			<?php endforeach; ?>
 		<?php else : ?>
-		<?php $iframe_src = $tyrolean_clients[0]->tyrolean_url; ?>
+		<?php $iframe_src = $bbbolt_clients[0]->bbbolt_url; ?>
 		<?php endif; ?>
-			<iframe id="tyrolean_frame" name="tyrolean_frame" src="<?php echo $iframe_src; ?>" width="100%">
-				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "tyrolean") ?></p>
+			<iframe id="bbbolt_frame" name="bbbolt_frame" src="<?php echo $iframe_src; ?>" width="100%">
+				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 		</div>
 		<?php
@@ -314,8 +314,8 @@ class Tyrolean_Client_UI {
 	 * WordPress Administration.
 	 **/
 	public function support_form_slider() { ?>
-		<div id="ty_support_slider">
-			<div id="ty_support_toggle"><a href="#">&lt;</a></div>
+		<div id="bbb_support_slider">
+			<div id="bbb_support_toggle"><a href="#">&lt;</a></div>
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
@@ -325,11 +325,11 @@ class Tyrolean_Client_UI {
 	/**
 	 * To display the form in an aesthetic, usable way, we need to apply custom styles. 
 	 * 
-	 * This function is hooked to the admin header where it enqueues styles for Tyrolean.
+	 * This function is hooked to the admin header where it enqueues styles for bbBolt.
 	 **/
 	public function print_styles() { ?>
 		<style>
-		#ty_support_slider {
+		#bbb_support_slider {
 			height: 100%;
 			width:460px;
 			position: fixed;
@@ -337,7 +337,7 @@ class Tyrolean_Client_UI {
 			top: 0;
 		}
 
-		#ty_support_slider #ty_support_toggle {
+		#bbb_support_slider #bbb_support_toggle {
 			background: #ECECEC;
 			border: 1px solid #CCC;
 			width: 10px;
@@ -359,12 +359,12 @@ class Tyrolean_Client_UI {
 			z-index: 49;
 		}
 
-		#ty_support_slider #ty_support_toggle a {
+		#bbb_support_slider #bbb_support_toggle a {
 			font-weight: bold;
 			text-decoration: none;
 		}
 
-		#ty_support_slider #ty_support_form {
+		#bbb_support_slider #bbb_support_form {
 			background: #ECECEC;
 			border: 1px solid #CCC;
 			height: 100%;
@@ -383,15 +383,15 @@ class Tyrolean_Client_UI {
 
 
 	/**
-	 * Javascript included in the admin footer to make the Tyrolean support slider more dynamic.
+	 * Javascript included in the admin footer to make the bbBolt support slider more dynamic.
 	 **/
 	public function print_scripts() { ?>
 		<script>
 		jQuery(document).ready(function($) {
-			$('#ty_support_slider #ty_support_toggle').click(function() {
-				var $righty = $('#ty_support_slider');
+			$('#bbb_support_slider #bbb_support_toggle').click(function() {
+				var $righty = $('#bbb_support_slider');
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
-				$('#ty_support_toggle a').text() == '<' ? $('#ty_support_toggle a').text('>') : $('#ty_support_toggle a').text('<');
+				$('#bbb_support_toggle a').text() == '<' ? $('#bbb_support_toggle a').text('>') : $('#bbb_support_toggle a').text('<');
 			});
 		});
 		</script>
@@ -400,9 +400,9 @@ class Tyrolean_Client_UI {
 }
 
 /**
- * Register a Tyrolean client. Do not use before init.
+ * Register a bbBolt client. Do not use before init.
  *
- * A function for creating or modifying a tyrolean client pointing to our 
+ * A function for creating or modifying a bbbolt client pointing to our 
  * remote WordPress site that is running the bbPress forums.
  * 
  * The function will accept an array (second optional parameter), 
@@ -410,8 +410,8 @@ class Tyrolean_Client_UI {
  *
  * Optional $args contents:
  **/
-function register_tyrolean_client( $name, $args = array() ){
-	global $tyrolean_clients;
+function register_bbbolt_client( $name, $args = array() ){
+	global $bbbolt_clients;
 
-	$tyrolean_clients[] = new Tyrolean_Client( $name, $args );
+	$bbbolt_clients[] = new bbBolt_Client( $name, $args );
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * Feed management for Tyrolean
+ * Feed management for bbBolt
  *
- * @package Tyrolean
+ * @package bbBolt
  */
 
 
@@ -15,12 +15,12 @@ $forums_url 	 = 'http://test.brentshepherd.com/forums/';
 $forums_feed_url = $forums_url . 'forum/feed';
 $topics_feed_url = $forums_url . 'topic/feed';
 
-function ty_add_menu_page(){
-	add_menu_page( 'Code Poets Society', 'Code Poets', 'read', 'tyrolean', 'ty_feeds_page' );
+function bbb_add_menu_page(){
+	add_menu_page( 'Code Poets Society', 'Code Poets', 'read', 'bbbolt', 'bbb_feeds_page' );
 }
-add_action( 'admin_menu', 'ty_add_menu_page' );
+add_action( 'admin_menu', 'bbb_add_menu_page' );
 
-function ty_feeds_page(){
+function bbb_feeds_page(){
 	global $forums_feed_url, $topics_feed_url;
 	?>
 	<div class="wrap">
@@ -49,7 +49,7 @@ function ty_feeds_page(){
 }
 
 // Set feed cache for support posts to be one minute
-function ty_feed_lifetime( $duration, $url ){
+function bbb_feed_lifetime( $duration, $url ){
 	global $forums_feed_url, $topics_feed_url;
 
 	if( $url == $forums_feed_url || $url == $topics_feed_url )
@@ -60,13 +60,13 @@ function ty_feed_lifetime( $duration, $url ){
 add_filter( 'wp_feed_cache_transient_lifetime', 't_feed_lifetime', 10, 2 );
 
 
-function ty_new_topic_form(){ ?>
+function bbb_new_topic_form(){ ?>
 	<div id="new-topic-<?php bbp_topic_id(); ?>" class="bbp-topic-form">
 
 		<form id="new_post" name="new_post" method="post" action="">
 			<fieldset>
 				<legend>
-					<?php _e( 'Create new topic', 'tyrolean' ); ?>
+					<?php _e( 'Create new topic', 'bbbolt' ); ?>
 				</legend>
 				<div>
 
