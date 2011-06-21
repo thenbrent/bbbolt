@@ -17,37 +17,61 @@ if( ! defined( 'BBBOLT_PLUGIN_URL' ) )
 
 function register_bbbolt_server( $name = '', $args = array() ){
 
+	$backtrace = debug_backtrace();
+
+	if( empty( $args[ 'registering_plugin' ] ) )
+		$args['registering_plugin'] = basename( dirname( $backtrace[0]['file'] ) ) . '/' . basename( $backtrace[0]['file'] );
+
 	$bbbolt_server = new bbBolt_Server( $name = '', $args );
 }
-//add_action( 'init', 'register_bbbolt_server' );
 
 
-class bbb_Server {
+class bbBolt_Server {
 
-	private $name;
-	private $internal_name;
-	private $bbbolt_url;
-	private $bbbolt_client;
+	private $name;			
+	private $internal_name;	
+	private $bbbolt_url;	
+	private $bbbolt_client;	
+	private $registering_plugin;	// The plugin which has registered the server
 
 	function __construct( $name, $args = array() ){
-		
+
 		if( empty( $name ) )
 			$name = get_bloginfo( 'name' );;
 
 		if( empty( $args['forums_url'] ) )
 			$args['forums_url'] = get_site_url();
 
-		$this->name          = $name;
-		$this->internal_name = sanitize_key( strtolower( $name ) );
-		$this->site_url      = $args['forums_url'];
-		$this->bbbolt_url    = $args['forums_url'] . 'bbbolt/';
+		$this->name               = $name;
+		$this->internal_name      = sanitize_key( strtolower( $name ) );
+		$this->site_url           = $args['forums_url'];
+		$this->bbbolt_url         = $args['forums_url'] . 'bbbolt/';
+		$this->registering_plugin = $args['registering_plugin'];
 
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
-		add_action( 'init', array( &$this, 'flush_rules' ) );
+		add_action( 'init', array( &$this, 'check_requirements' ), 11 );
+		add_action( 'init', array( &$this, 'flush_rules' ), 12 );
 		add_action( 'generate_rewrite_rules', array( &$this, 'rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
+	}
+
+	/**
+	 * Check to make sure bbPress is activate as the server relies on it.
+	 **/
+	function check_requirements(){
+
+		if( ! defined( 'BBP_VERSION' ) ) {
+			require_once( ABSPATH . 'wp-admin/includes/plugin.php' );	// Need deactivate_plugins()
+			deactivate_plugins( $this->registering_plugin );
+			wp_die( sprintf( 'The %sbbPress plugin%s must be active for %sbbBolt%s to work its magic. bbBolt has been deactivated. %sInstall & activate bbPress%s', 
+							 '<a href="http://wordpress.org/extend/plugins/bbpress/">', '</a>', 
+							 '<a href="http://bbbolt.org/">', '</a>', 
+							 '<br/><a href="'.admin_url('plugins.php').'">', '&nbsp;&raquo;</a>' 
+					)
+			);
+		}
 	}
 
 	/**
@@ -180,7 +204,7 @@ class bbb_Server {
 }
 
 
-class bbb_Client {
+class bbBolt_Client {
 
 	private $name;
 	private $internal_name;
