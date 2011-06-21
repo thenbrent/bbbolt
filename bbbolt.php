@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: bbBolt
-Description: Super simple support for WordPress Plugin Developers. 
-Author: Brent Shepherd
-Author URI: http://find.brentshepherd.com/
-Version: pre-alpha
+ bbBolt
+ Super simple support for WordPress Plugin Developers. 
+ Author: Brent Shepherd
+ Author URI: http://find.brentshepherd.com/
+ Version: pre-alpha
 */
 
 if( ! defined( 'BBBOLT_PLUGIN_BASENAME' ) )
@@ -21,7 +21,7 @@ require_once( BBBOLT_PLUGIN_DIR . 'bbbolt-client-ui.class.php' );
 
 
 /**
- * Register a bbBolt Server for your site. Do not use before init or with init priority less than 10.
+ * Register a bbBolt Server for your site. Do not use before init or with init priority later than 10.
  *
  * A function for creating a bbBolt server.
  * 
