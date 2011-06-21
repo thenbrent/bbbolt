@@ -9,12 +9,22 @@ Version: pre-alpha
 
 require_once( 'bbbolt.php' );
 
-function tp_register_bbbolt_client(){
+function tp_register_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
-		$args = array( 'forums_url' => 'http://localhost/wp31/' );
+		$args = array( 'site_url' => 'http://localhost/wp31/' );
 
 		register_bbbolt_client( 'Test Plugin', $args );
 	}	
 }
-add_action( 'init', 'tp_register_bbbolt_client' );
+add_action( 'init', 'tp_register_client' );
+
+
+function tp_register_another_client(){
+	if( function_exists( 'register_bbbolt_client' ) ){
+		$args = array( 'site_url' => 'http://localhost/wp32/' );
+
+		register_bbbolt_client( 'Test Plugin', $args );
+	}	
+}
+add_action( 'init', 'tp_register_another_client' );
 
