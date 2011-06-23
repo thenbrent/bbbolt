@@ -12,7 +12,7 @@ require_once( 'bbbolt.php' );
 function register_test_bbbolt_server(){
 
 	if( function_exists( 'register_bbbolt_server' ) ){
-		$bbbolt_server = register_bbbolt_server( 'Test bbb Server' );
+		$bbbolt_server = register_bbbolt_server( 'bbb-test-server' );
 	}	
 }
 add_action( 'init', 'register_test_bbbolt_server' );

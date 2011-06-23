@@ -11,9 +11,12 @@ require_once( 'bbbolt.php' );
 
 function tp_register_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
-		$args = array( 'site_url' => 'http://localhost/wp31/' );
+		$args = array( 
+			'site_url'  => 'http://localhost/wp31/',
+			'labels'	=> array( 'name' => 'WordPress 3.1 Site' )
+		);
 
-		register_bbbolt_client( 'Test Plugin', $args );
+		register_bbbolt_client( 'wp1-test-plugin', $args );
 	}	
 }
 add_action( 'init', 'tp_register_client' );
@@ -23,7 +26,7 @@ function tp_register_another_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
 		$args = array( 'site_url' => 'http://localhost/wp32/' );
 
-		register_bbbolt_client( 'Test Plugin', $args );
+		register_bbbolt_client( 'Test Plugin WP2', $args );
 	}	
 }
 add_action( 'init', 'tp_register_another_client' );
