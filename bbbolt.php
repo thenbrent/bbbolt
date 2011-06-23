@@ -30,14 +30,12 @@ require_once( BBBOLT_PLUGIN_DIR . 'bbbolt-client-ui.class.php' );
  *
  * Optional $args contents:
  **/
-function register_bbbolt_server( $name = '', $args = array() ){
+function register_bbbolt_server( $name, $args = array() ){
 
-	$backtrace = debug_backtrace();
+	// If you are using a custom bbBolt Server Class, hook into this filter
+	$bbbolt_server_class = apply_filters( 'bbBolt_Server_Class', 'bbBolt_Server' );
 
-	if( empty( $args[ 'registering_plugin' ] ) )
-		$args['registering_plugin'] = basename( dirname( $backtrace[0]['file'] ) ) . '/' . basename( $backtrace[0]['file'] );
-
-	$bbbolt_server = new bbBolt_Server( $name = '', $args );
+	$bbbolt_server = new $bbbolt_server_class( $name, $args );
 }
 
 
@@ -56,5 +54,8 @@ function register_bbbolt_server( $name = '', $args = array() ){
 function register_bbbolt_client( $name, $args = array() ){
 	global $bbbolt_clients;
 
-	$bbbolt_clients[] = new bbBolt_Client( $name, $args );
+	// If you are using a custom bbBolt Server Class, hook into this filter
+	$bbbolt_client_class = apply_filters( 'bbBolt_Client_Class', 'bbBolt_Client' );
+
+	$bbbolt_clients[] = new $bbbolt_client_class( $name, $args );
 }
