@@ -97,9 +97,10 @@ class bbBolt_Client_UI {
 		<?php else : ?>
 		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 		<?php endif; ?>
-			<iframe id="bbbolt_frame" name="bbbolt_frame" src="<?php echo $iframe_src; ?>" width="100%">
+			<iframe id="bbbolt_frame" name="bbbolt_frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
+			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
 		</div>
 		<?php
 	}
@@ -142,7 +143,7 @@ class bbBolt_Client_UI {
 			float: left;
 			position: relative;
 			left: -13px;
-			top: 50%;
+			top: 40%;
 			padding: 15px 0px 0px 2px;
 			-webkit-border-top-left-radius: 6px;
 			-webkit-border-bottom-left-radius: 6px;
@@ -173,6 +174,13 @@ class bbBolt_Client_UI {
 			-webkit-box-shadow:inset 2px 0px 5px #CCC;
 			box-shadow:inset 2px 0px 5px #CCC;
 			z-index: 50;
+		}
+
+		#power-bbbolt {
+			font-size: 0.8em;
+			position: absolute;
+			bottom: 25px;
+			right: 5px;
 		}
 		</style>
 	<?php
