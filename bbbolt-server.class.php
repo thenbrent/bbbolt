@@ -5,20 +5,58 @@
  **/
 class bbBolt_Server {
 
-	private $name;			
-	private $internal_name;	
-	private $bbbolt_url;	
-	private $bbbolt_client;	
-	private $subscription;			// An array of name => value pairs relating to the subscription, or false if no subscription is required
-	private $registering_plugin;	// The plugin which has registered the server
+	private $name;
+	private $bbbolt_url;
+	private $bbbolt_client;
+	private $subscription;
+	private $registering_plugin;
 
+	public $labels;
+
+	/**
+	 * Create the bbBolt Server Object according to intersection between default settings & parameters in $args array.
+	 * 
+	 * @param $args['name'] default blog name, 
+	 * @param $args['site_url'], default current site's URL,
+	 * @param $args['registering_plugin'], default the file and folder of the plugin with calls register_bbbolt_server
+	 * @param $args['subscription']: default 20 USD/month until subscription is cancelled. An array of name => value pairs relating to the subscription.
+	 * 		payment_amount, default 20, the amount of the subscription. Regardless of the specified currency, the format must have decimal point. The decimal point must include exactly 2 digits to the right and an optional thousands separator to the left, which must be a comma. For example, specify EUR 2.000,00 as 2000.00 or 2,000.00. The specified amount cannot exceed USD $10,000.00, regardless of the currency used.
+	 * 		billing_period, default 'Month', the unit to calculate the billing cycle. One of Day, Week, Month, Year.
+	 * 		billing_frequency, default 12, The number of billing periods that make up the billing cycle. Combined with billing_period, must be less than or equal to one year.
+	 * 		billing_total_cycles, default 0, The total number of billing cycles. If you do not specify a value, the payments continue until PayPal (or the buyer) cancels or suspends the profile. A value other than the default of 0 terminates the payments after the specified number of billing cycles. For example billing_total_cycles = 2 with billing_frequency = 12 and billing_period = Month would continue the payments for two years. 
+	 * 		currency_code, default 'USD'
+	 * 		initial_amount, default 0, An optional non-recurring payment made when the recurring payments profile is created.
+	 * 
+	 **/
 	function __construct( $name, $args = array() ){
 
 		$defaults = array(
-			'name'            => get_bloginfo( 'name' ),
-			'site_url'        => get_site_url(),
-			'subscription'    => false,
-			'labels'          => array( 'name' => ucfirst( $name ) )
+			'name'     => get_bloginfo( 'name' ),
+			'site_url' => get_site_url(),
+			'labels'   => array( 'name' => ucfirst( $name ) ),
+			'paypal'   => array( // Global details for PayPal
+				'sandbox'      => true,
+				'currency'     => 'USD',
+				'cancel_url'   => add_query_arg( array( 'bbbolt'=> 1, 'return' => 'cancel' ), site_url() ),
+				'return_url'   => add_query_arg( array( 'bbbolt'=> 1, 'return' => 'paid' ), site_url() )
+			),
+			'subscription' => array(
+				'start_date'         => date( 'Y-m-d\TH:i:s', time() + ( 24 * 60 * 60 ) ),
+				'description'        => get_bloginfo( 'name' ) . __( ' Support Subscription', 'bbbolt' ),
+				// Price of the Subscription
+				'amount'             => '20.00',
+				'initial_amount'     => '0.00',
+				'average_amount'     => '25',
+				// Temporal Details of the Subscription
+				'period'             => 'Month',
+				'frequency'          => '1',
+				'total_cycles'       => '0',
+				// Trial Period details
+				'trial_amount'       => '0.00',
+				'trial_period'       => 'Month',
+				'trial_frequency'    => '0',
+				'trial_total_cycles' => '0'
+			)
 		);
 
 		$args = wp_parse_args( $args, $defaults );
@@ -31,6 +69,8 @@ class bbBolt_Server {
 		$this->name               = sanitize_key( $name );
 		$this->site_url           = $args['site_url'];
 		$this->labels             = (object)$args['labels'];
+		$this->paypal             = (object)$args['paypal'];
+		$this->subscription       = (object)$args['subscription'];
 		$this->bbbolt_url         = add_query_arg( 'bbbolt', $args['site_url'] );
 		$this->registering_plugin = $args['registering_plugin'];
 
@@ -79,18 +119,23 @@ class bbBolt_Server {
 				exit();
 			}
 		}
-		$redirect_to = apply_filters( 'registration_redirect', !empty( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '' );
+		$redirect_to = apply_filters( 'registration_redirect', ! empty( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '' );
 		?>
 		<div id="register-container">
 		<?php if( ! get_option( 'users_can_register' ) ) : ?>
 			<h3><?php printf( __( 'Registrations for %s are Closed', 'bbbolt' ), $this->labels->name ); ?></h3>
 			<p><?php printf( __( 'Please contact the %s developers to request they open registration on %s.', 'bbbolt' ), $this->labels->name, '<a href="'.$this->site_url.'">'.$this->site_url.'</a>' ); ?></p>
-		<?php else : ?>
+		<?php elseif( isset( $_GET['token'] ) ) : // Subscriber returned from PayPal Payment ?>
+			<?php if( isset( $_GET['return'] ) && $_GET['return'] == 'paid' ) : ?>
+				<?php // DoExpressCheckoutPayment & maybe GetExpressCheckoutDetails ?>
+				<?php // useraction=continue supress thank you page ?>
+			<?php elseif( isset( $_GET['return'] ) && $_GET['return'] == 'cancel' ) : ?>
+				<?php // GetExpressCheckoutDetails ?>
+				<?php endif; ?>
+		<?php else : // Output Login form ?>
 			<h3><?php _e( 'Sign up for Lightning Fast Support', 'bbbolt' ); ?></h3>
-			<p><?php printf( __( 'Support the  %s gets you premium support and influence over future development.', 'bbbolt' ), $this->labels->name  ); ?></p>
-			<?php if( $this->subscription ) : ?>
+			<p><?php printf( __( 'Supporting  %s gets you premium support and influence over future development.', 'bbbolt' ), $this->labels->name  ); ?></p>
 			<p><?php printf( __( 'Subscriptions are %s per %year', 'bbbolt' ), $this->subscription->amount, $this->subscription->period ); ?></p>
-			<?php endif; ?>
 			<form name="registerform" id="registerform" action="<?php echo site_url('wp-login.php?action=register', 'login_post') ?>" method="post">
 				<p>
 					<label><?php _e( 'Username:', 'bbbolt' ) ?>
@@ -103,7 +148,9 @@ class bbBolt_Server {
 				<?php do_action( 'register_form' ); ?>
 				<p id="reg_passmail"><?php _e( 'A password will be e-mailed to you.', 'bbbolt' ); ?></p>
 				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
-				<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Register'); ?>" tabindex="100" /></p>
+				<p class="submit">
+					<input type="image" name="bbb-submit" id="bbb-submit" src="https://www.paypal.com/en_US/i/btn/btn_dg_pay_w_paypal.gif" />
+				</p>
 			</form>
 		<?php endif; ?>
 			<p id="already-member">
