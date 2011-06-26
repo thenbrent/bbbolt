@@ -252,8 +252,6 @@ class bbBolt_Server {
 		// Create User
 		$user_id = wp_create_user( $_POST['bbb-username'], $_POST['bbb-password'], $_POST['bbb-email'] );
 
-		error_log( '$user_id = ' . print_r( $user_id, true ) );
-
 		// Make sure the user was created successfully
 		if( is_wp_error( $user_id ) ) {
 			$bbb_message = $user_id->get_error_message();
@@ -269,8 +267,6 @@ class bbBolt_Server {
 
 		// Create the Recurring Payment Profile with PayPal
 		$response = $this->paypal->start_subscription();
-
-		error_log('response = ' . print_r( $response, true ) );
 
 		// Make sure the request with PayPal succeeded
 		if( $response['ACK'] == 'Failure' || $response['ACK'] == 'FailureWithWarning' || ! isset( $response['PROFILEID'] ) ){
