@@ -90,7 +90,7 @@ class bbBolt_Client_UI {
 			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
 			<ul id="bbb_client_list">
 			<?php foreach( $bbbolt_clients as $client ) : ?>
-				<li><a href="<?php echo $client->get_url(); ?>" target="bbbolt_frame"><?php echo $client->get_name(); ?></a></li>
+				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt_frame"><?php echo $client->get_name(); ?></a></li>
 			<?php endforeach; ?>
 			</ul>
 		<?php else : ?>
@@ -188,6 +188,11 @@ class bbBolt_Client_UI {
 			z-index: 999;
 		}
 
+		#bbb_client_list {
+			border-bottom: 1px solid #CCC;
+			padding-bottom: 10px;
+		}
+
 		#bbb_client_list li {
 			display: inline-block;
 			list-style-type: none;
@@ -218,10 +223,10 @@ class bbBolt_Client_UI {
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
 				if($('#bbb_support_toggle a').text() == '<'){
 					$('#bbb_support_toggle a').text('>');
-					$('#wpcontent, #footer').fadeTo('fast',0.4);
+					$('#wpcontent, #adminmenuwrap, #footer').fadeTo('fast',0.4);
 				} else {
 					$('#bbb_support_toggle a').text('<')
-					$('#wpcontent, #footer').fadeTo('fast',1);
+					$('#wpcontent, #adminmenuwrap, #footer').fadeTo('fast',1);
 				}
 				return false;
 			});
