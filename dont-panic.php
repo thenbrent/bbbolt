@@ -1,11 +1,12 @@
 <?php
-
 /**
  * New/Edit Topic
  *
  * @package bbBolt
  */
 ?>
+
+<h3><?php _e( "Don't Panic", 'bbbolt' ); ?></h3>
 
 <?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
