@@ -206,7 +206,6 @@ class bbBolt_Client_UI {
 	<?php
 	}
 
-
 	/**
 	 * Javascript included in the admin footer to make the bbBolt support slider more dynamic.
 	 **/
@@ -217,7 +216,13 @@ class bbBolt_Client_UI {
 			$('#bbb_support_slider #bbb_support_toggle').click(function() {
 				var $righty = $('#bbb_support_slider');
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
-				$('#bbb_support_toggle a').text() == '<' ? $('#bbb_support_toggle a').text('>') : $('#bbb_support_toggle a').text('<');
+				if($('#bbb_support_toggle a').text() == '<'){
+					$('#bbb_support_toggle a').text('>');
+					$('#wpcontent, #footer').fadeTo('fast',0.4);
+				} else {
+					$('#bbb_support_toggle a').text('<')
+					$('#wpcontent, #footer').fadeTo('fast',1);
+				}
 				return false;
 			});
 
