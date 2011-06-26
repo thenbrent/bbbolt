@@ -4,9 +4,17 @@
  *
  * @package bbBolt
  */
+global $bbb_message;
 ?>
 
 <h3><?php _e( "Don't Panic", 'bbbolt' ); ?></h3>
+
+<?php if( isset( $bbb_message ) ) : ?>
+	<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
+<?php endif; ?>
+
+<?php do_action( 'bbp_template_notices' ); ?>
+
 
 <?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
@@ -14,14 +22,14 @@
 
 		<div id="new-topic-<?php bbp_topic_id(); ?>" class="bbp-topic-form">
 
-			<form id="new_post" name="new_post" method="post" action="">
+			<form id="new-post" name="new-post" method="post" action="">
 				<fieldset>
 					<legend>
 						<?php
-							if ( bbp_is_topic_edit() )
-								printf( __( 'Edit topic "%s"', 'bbpress' ), bbp_get_topic_title() );
-							else
-								bbp_is_forum() ? printf( __( 'Post new topic in: &ldquo;%s&rdquo;', 'bbbolt' ), bbp_get_forum_title() ) : _e( 'New ticket', 'bbbolt' );
+						if ( bbp_is_topic_edit() )
+							printf( __( 'Edit ticket "%s"', 'bbpress' ), bbp_get_topic_title() );
+						else
+							bbp_is_forum() ? printf( __( 'Post new ticket in: &ldquo;%s&rdquo;', 'bbbolt' ), bbp_get_forum_title() ) : _e( 'New ticket', 'bbbolt' );
 						?>
 					</legend>
 
@@ -32,7 +40,7 @@
 					<?php endif; ?>
 
 					<div>
-						<?php if ( !bbp_is_forum() ) : ?>
+						<?php if ( ! bbp_is_forum() && bbp_get_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ) != 'No forums available' ) : ?>
 							<p>
 								<label for="bbp_forum_id"><?php _e( 'Forum:', 'bbbolt' ); ?></label><br />
 								<?php bbp_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ); ?>
@@ -51,14 +59,14 @@
 							<textarea id="bbp_topic_content" tabindex="<?php bbp_tab_index(); ?>" name="bbp_topic_content" cols="51" rows="6"><?php bbp_form_topic_content(); ?></textarea>
 						</p>
 
-						<?php if ( !bbp_is_topic_edit() ) : ?>
+						<?php if ( ! bbp_is_topic_edit() ) : ?>
 							<p>
 								<label for="bbp_topic_tags"><?php _e( 'Tags:', 'bbbolt' ); ?></label><br />
 								<input type="text" value="<?php bbp_form_topic_tags(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_tags" id="bbp_topic_tags" />
 							</p>
 						<?php endif; ?>
 
-						<?php if ( bbp_is_subscriptions_active() && !bbp_is_anonymous() && ( !bbp_is_topic_edit() || ( bbp_is_topic_edit() && !bbp_is_topic_anonymous() ) ) ) : ?>
+						<?php if ( bbp_is_subscriptions_active() && ! bbp_is_anonymous() && ( !bbp_is_topic_edit() || ( bbp_is_topic_edit() && !bbp_is_topic_anonymous() ) ) ) : ?>
 							<p>
 								<input name="bbp_topic_subscription" id="bbp_topic_subscription" type="checkbox" value="bbp_subscribe" <?php bbp_form_topic_subscribed(); ?> tabindex="<?php bbp_tab_index(); ?>" />
 								<?php if ( bbp_is_topic_edit() && ( $post->post_author != bbp_get_current_user_id() ) ) : ?>
@@ -85,7 +93,7 @@
 						<?php endif; ?>
 
 						<div class="bbp-submit-wrapper">
-							<button type="submit" tabindex="<?php bbp_tab_index(); ?>" id="bbp_topic_submit" name="bbp_topic_submit"><?php _e( 'Submit', 'bbbolt' ); ?></button>
+							<button type="submit" tabindex="<?php bbp_tab_index(); ?>" id="bbb_topic_submit" name="bbb_topic_submit" class="button-secondary"><?php _e( 'Submit', 'bbbolt' ); ?></button>
 						</div>
 					</div>
 
