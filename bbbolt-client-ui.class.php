@@ -189,10 +189,11 @@ class bbBolt_Client_UI {
 		}
 
 		#bbb_client_list li {
-			display: inline;
+			display: inline-block;
 			list-style-type: none;
-			margin-right: 1.5em;
+			margin-right: 10px;
 			padding-left: 4px;
+			width: 140px;
 		}
 
 		#power-bbbolt {
