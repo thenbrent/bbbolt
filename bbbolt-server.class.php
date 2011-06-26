@@ -291,24 +291,33 @@ class bbBolt_Server {
 	 * Routes requests and chooses which view to display
 	 */
 	function request_handler(){
-		global $wp_query;
+		global $wp_query, $bbp, $bbb_message;
 
 		// Don't touch non bbbolt queries
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
+		// New user Registration
 		if( ( isset( $_POST['bbb-registration'] ) ) ){
 
 			$this->register_user();
 
-		} else {
+		} elseif( isset( $_POST['bbb_topic_submit'] ) ){
+			error_log('POST = ' . print_r( $_POST, true ) );
 
+			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
+			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
+			bbp_new_topic_handler();					
+
+		} else {
+			// Page View
 			$this->get_header();
 
+			// Get the user to login or signup
 			if( ! is_user_logged_in() ) {
 				$this->signup_process();
-			} else { ?>
-				<?php require_once( dirname( __FILE__ ) . '/dont-panic.php' );
+			} else {
+				require_once( dirname( __FILE__ ) . '/dont-panic.php' );
 			}
 
 			$this->get_footer();
@@ -317,7 +326,20 @@ class bbBolt_Server {
 		exit;
 	}
 
+	/* HELPER FUNCTIONS */
+	
+	/**
+	 * Get the URL for the server
+	 */
+	function get_url(){
+		return $this->bbbolt_url;
+	}
+
 	/* TEMPLATE FUNCTIONS */
+
+	/**
+	 * Output custom CSS for the bbBolt iframe.
+	 */
 	function print_styles() { ?>
 		<style>
 			html,body {
@@ -369,10 +391,19 @@ class bbBolt_Server {
 			.bbp-topic-form textarea {
 				width: 330px;
 			}
+			.bbp-topic-form legend {
+				float: left;
+				margin: 0px 0px 12px;
+				width: 100%;
+			}
 		</style>
 	<?php
 	}
 
+
+	/**
+	 * Get all required header elements for the bbBolt iframe and output them
+	 */
 	function get_header() {
 		wp_enqueue_script( 'strengthy', get_bbbolt_dir_url().'/js/jquery.plugins.js', array( 'jquery' ) );
 		?><!DOCTYPE html>
@@ -391,9 +422,14 @@ class bbBolt_Server {
 		?>
 		</head>
 		<body <?php body_class(); ?>>
+			<h2><?php echo $this->labels->name; ?></h2>
 	<?php
 	}
-	
+
+
+	/**
+	 * Get all required footer elements for the bbBolt iframe and output them
+	 */
 	function get_footer() { ?>
 		<script>
 			jQuery(document).ready(function($){
