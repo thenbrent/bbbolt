@@ -103,22 +103,11 @@ class bbBolt_Server {
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
-				window.onload = function(){
-					var bbbolt_frame = document.getElementById('bbbolt_frame');
-					if(bbbolt_frame !== null){
-						if(bbbolt_frame.src){
-							bbbolt_frame.src = document.location; 
-						}else if(bbbolt_frame.contentWindow !== null && bbbolt_frame.contentWindow.location !== null){
-							bbbolt_frame.contentWindow.location = document.location; 
-						}else{ 
-							bbbolt_frame.setAttribute('src', document.location); 
-						}
+				jQuery(document).ready(function($){
+					if($('#bbbolt_frame', top.document).attr('src') != document.location.href ){
+						$('#bbbolt_frame', top.document).attr('src',document.location.href)
 					}
-					//if(top.document.getElementById('bbbolt_frame').src != document.location ){
-						//top.document.getElementById('bbbolt_frame').src = document.location;
-						//parent.document.getElementById('bbbolt_frame').src = document.location;
-					//}
-				}
+				});
 			</script>
 
 			<?php if( $_GET['return'] == 'paid' ) {
@@ -131,7 +120,7 @@ class bbBolt_Server {
 
 				<h3><?php printf( __( '%s Sign-up Cancelled', 'bbbolt' ), $this->labels->name ); ?></h3>
 				<p><?php _e( 'You have successfully terminated the subscription process.', 'bbbolt' ); ?></p>
-				<p><?php printf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="$this->bbbolt_url">', '</a>' ); ?></p>
+				<p><?php printf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="'.$this->bbbolt_url.'">', '</a>' ); ?></p>
 
 			<?php } ?>
 		<?php else : // Output Sign-up blurb ?>
@@ -174,19 +163,20 @@ class bbBolt_Server {
 	 **/
 	function register_form( $credentials ) { 
 		?>
-		<h3><?php _e( 'Confirm your Subscription', 'bbbolt' ); ?></h3>
+		<h3><?php _e( 'Confirm Your Subscription', 'bbbolt' ); ?></h3>
+		<p>Please enter your account details below and click sign-up to complete the subscription.</p>
 		<form name="registerform" id="registerform" action="<?php echo site_url('wp-login.php?action=register', 'login_post') ?>" method="post">
 			<p>
 				<label><?php _e( 'Username:', 'bbbolt' ) ?></label>
-				<input type="text" name="user_login" id="user_login" class="input" value="<?php echo esc_attr(stripslashes($credentials['username'])); ?>" size="20" tabindex="10" />
+				<input type="text" name="user_login" id="user_login" class="input" value="<?php echo esc_attr(stripslashes($credentials['username'])); ?>" size="25" tabindex="10" />
 			</p>
 			<p>
 				<label><?php _e( 'E-mail:', 'bbbolt' ) ?></label>
-				<input type="text" name="user_email" id="user_email" class="input" value="<?php echo esc_attr(stripslashes($credentials['email'])); ?>" size="20" tabindex="20" />
+				<input type="text" name="user_email" id="user_email" class="input" value="<?php echo esc_attr(stripslashes($credentials['email'])); ?>" size="25" tabindex="20" />
 			</p>
 			<p>
 				<label><?php _e( 'Password:', 'bbbolt' ) ?></label>
-				<input type="text" name="user_password" id="user_password" class="input" value="" size="20" tabindex="30" />
+				<input type="password" name="user_password" id="user_password" class="input" value="" size="25" tabindex="30" />
 			</p>
 			<p><?php printf( __( 'Total: $%s per %s', 'bbbolt' ), $this->subscription->amount, $this->subscription->period ); ?></p>
 			<?php do_action( 'register_form' ); ?>
@@ -197,19 +187,7 @@ class bbBolt_Server {
 		</form>
 		<script>
 			jQuery(document).ready(function($){
-				console.log(document);
-				console.log($('#user_password'));
-				$('#user_password').strengthy({
-					minLength: 5,
-					msgs: {
-						'Weak.',
-						'Weak.',
-						'Good.',
-						'Good.',
-						'Strong.',
-						'Show password'
-					}
-				});
+				$('#user_password').strengthy({ minLength: 5, msgs: [ 'Weak.', 'Weak.', 'Good.', 'Good.', 'Strong.', 'Show password' ] });
 			});
 		</script>
 	<?php
@@ -275,16 +253,20 @@ class bbBolt_Server {
 				display: inline-block;
 				width: 100px;
 			}
-			#registerform input {
+			#registerform input[type="text"],#registerform input[type="password"] {
 				display: inline-block;
 				width: 150px;
+				margin: 0px 5px;
+			}
+			#registerform .strengthy-show-toggle {
+				margin: 10px 0px 5px 105px;
 			}
 		</style>
 	<?php
 	}
 
 	function get_header() {
-		wp_enqueue_script( 'strengthy', $this->get_bbbolt_dir_url().'/js/jquery.plugins.js', array( 'jquery' ) );
+		wp_enqueue_script( 'strengthy', get_bbbolt_dir_url().'/js/jquery.plugins.js', array( 'jquery' ) );
 		?><!DOCTYPE html>
 		<html <?php language_attributes(); ?>>
 		<head>
@@ -299,6 +281,13 @@ class bbBolt_Server {
 	}
 	
 	function get_footer() { ?>
+		<script>
+			jQuery(document).ready(function($){
+				// Hide the loading animation
+				$('#bbbolt_frame', top.document ).removeClass('loading');
+				$('#loading', top.document ).hide();
+			});
+		</script>
 		</body>
 		</html>
 		<?php
@@ -367,19 +356,6 @@ class bbBolt_Server {
 	function query_var( $vars ) {
 		$vars[] = 'bbbolt';
 		return $vars;
-	}
-
-	/**
-	 * Returns the URL to the location of this file's parent folder.
-	 * 
-	 * Useful for enqueuing scripts without hardcoding the URL. Allows the bbbolt directory to be located anywhere on the server.
-	 * 
-	 */
-	function get_bbbolt_dir_url() {
-		$path_after_plugin_dir = explode( 'plugins', dirname( $_SERVER["SCRIPT_FILENAME"] ) );
-		error_log(site_url());
-		error_log(__FILE__);
-		return plugins_url() . $path_after_plugin_dir[1];
 	}
 
 
