@@ -59,3 +59,16 @@ function register_bbbolt_client( $name, $args = array() ){
 
 	$bbbolt_clients[] = new $bbbolt_client_class( $name, $args );
 }
+
+
+/**
+ * Returns the URL to the location of this file's parent folder.
+ * 
+ * Useful for enqueuing scripts, styles & images without hardcoding the URL. 
+ * Allows the bbbolt directory to be located anywhere in a plugin.
+ * 
+ */
+function get_bbbolt_dir_url() {
+	$path_after_plugin_dir = explode( 'plugins', dirname( __FILE__ ) );
+	return plugins_url() . $path_after_plugin_dir[1];
+}
