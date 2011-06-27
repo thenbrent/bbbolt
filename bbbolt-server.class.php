@@ -112,6 +112,7 @@ class bbBolt_Server {
 		} elseif( isset( $_POST['bbb_topic_submit'] ) ) {
 
 			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
+			$bbb_message = 'Thanks for your submission. We will reply soon.';
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
 			bbp_new_topic_handler();
 
@@ -138,7 +139,7 @@ class bbBolt_Server {
 			$this->get_footer();
 
 		}
-		exit;
+		exit();
 	}
 
 
@@ -316,13 +317,12 @@ class bbBolt_Server {
 	/**
 	 * Display the support form
 	 */
-	function support_form() {
-		global $bbb_message; ?>
-
+	function support_form() { ?>
+		
 		<h3><?php _e( "New Ticket", 'bbbolt' ); ?></h3>
 
-		<?php if( isset( $bbb_message ) ) : ?>
-			<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
+		<?php if( $this->get_messages() ) : ?>
+			<div id="message" class="updated fade"><p><strong><?php echo $this->get_messages(); ?></strong></p></div>
 		<?php endif; ?>
 
 		<?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
@@ -499,6 +499,23 @@ class bbBolt_Server {
 
 
 	/**
+	 * Returns any messages from other functions in the class. Useful for printing messages in templates.
+	 */
+	function get_messages(){
+		global $bbb_message;
+
+		$message = '';
+		if( isset( $bbb_message ) )
+			$message .= $bbb_message . '<br/>';
+
+		if( isset( $_GET['bbb-msg'] ) )
+			$message .= $_GET['bbb-msg'];
+
+		return $message;
+	}
+
+
+	/**
 	 * Output custom CSS for the bbBolt iframe.
 	 */
 	function print_styles() { ?>
@@ -651,8 +668,13 @@ class bbBolt_Server {
 	/**
 	 * Get the URL for the server
 	 */
-	function get_url( $page = 'home' ){
-		return add_query_arg( 'bbbolt', $page, $this->site_url );
+	function get_url( $args = array( 'bbbolt' => 'home' ) ){
+		$url = add_query_arg( $args, $this->site_url );
+
+		if( $this->get_messages() )
+			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
+
+		return apply_filters( 'bbbolt_server_url', $url );
 	}
 
 
