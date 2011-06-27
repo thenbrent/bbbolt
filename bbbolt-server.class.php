@@ -93,6 +93,10 @@ class bbBolt_Server {
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
 	}
 
+
+	/**
+	 * Takes care of the signup user flow.
+	 */
 	function signup_process(){ 
 		global $wp_query;
 		?>
@@ -142,21 +146,6 @@ class bbBolt_Server {
 		</div>
 
 		<?php $this->login_form(); ?>
-
-		<script>
-			jQuery(document).ready(function($){
-				// Show Login Form
-				$('#login-link').click(function(){
-					$('#login-container').slideDown();
-					$('#register-container').slideUp();
-					return false;
-				});
-				// Dim the Registration frame when PayPal pops up
-				$('#paypal-submit').click(function(){
-					$('#register-container').fadeTo('fast',0.4);
-				});
-			});
-		</script>
 		<?php
 	}
 
@@ -196,12 +185,6 @@ class bbBolt_Server {
 				<input type="submit" name="bbb-registration" id="bbb-registration" class="button-primary" value="<?php esc_attr_e( 'Sign-Up Now', 'bbbolt' ); ?>" tabindex="100" />
 			</p>		
 		</form>
-		<script>
-			jQuery(document).ready(function($){
-				// Attach password strength meter to the registration form
-				$('#bbb-password').strengthy({ minLength: 5, msgs: [ 'Weak', 'Weak', 'OK', 'OK', 'Strong', 'Show password' ] });
-			});
-		</script>
 	<?php
 	}
 
@@ -227,15 +210,6 @@ class bbBolt_Server {
 				<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Get New Password'); ?>" tabindex="100" /></p>
 			</form>
 		</div>
-		<script>
-			jQuery(document).ready(function($){
-				$('#forgot-link').click(function(){
-					$('#forgot-container').slideDown();
-					$('#login-container').slideUp();
-					return false;
-				})
-			});
-		</script>
 	<?php
 	}
 
@@ -282,13 +256,11 @@ class bbBolt_Server {
 
 		$bbb_message = "Your account have been created. Thanks for signing up.";
 
-		//$this->get_header();
-		//require_once( 'dont-panic.php' );
-		//$this->get_footer();
 		// Don't run the registration process again
 		unset( $_POST['bbb-registration'] );
 		$this->request_handler();
 	}
+
 
 	/**
 	 * Routes requests and chooses which view to display
@@ -415,7 +387,9 @@ class bbBolt_Server {
 		return $this->bbbolt_url;
 	}
 
+
 	/* TEMPLATE FUNCTIONS */
+
 
 	/**
 	 * Output custom CSS for the bbBolt iframe.
@@ -494,6 +468,38 @@ class bbBolt_Server {
 
 
 	/**
+	 * Print the scripts used to enhance different parts of the login/registration/form submission process.
+	 */
+	function print_scripts() { ?>
+		<script>
+			jQuery(document).ready(function($){
+				// Show Login Form
+				$('#login-link').click(function(){
+					$('#login-container').slideDown();
+					$('#register-container').slideUp();
+					return false;
+				});
+
+				// Show forgot password form
+				$('#forgot-link').click(function(){
+					$('#forgot-container').slideDown();
+					$('#login-container').slideUp();
+					return false;
+				})
+
+				// Dim the Registration frame when PayPal pops up
+				$('#paypal-submit').click(function(){
+					$('#register-container, .bbbolt-title').fadeTo(0,0.2);
+				});
+
+				// Attach password strength meter to the registration form
+				$('#bbb-password').strengthy({ minLength: 5, msgs: [ 'Weak', 'Weak', 'OK', 'OK', 'Strong', 'Show password' ] });
+			});
+		</script>
+		<?php
+	}
+
+	/**
 	 * Get all required header elements for the bbBolt iframe and output them
 	 */
 	function get_header() {
@@ -513,8 +519,8 @@ class bbBolt_Server {
 			$this->print_styles(); 
 		?>
 		</head>
-		<body <?php body_class(); ?>>
-			<h2><?php echo $this->labels->name; ?></h2>
+		<body <?php body_class('bbbolt'); ?>>
+			<h2 class="bbbolt-title"><?php echo $this->labels->name; ?></h2>
 	<?php
 	}
 
@@ -522,12 +528,9 @@ class bbBolt_Server {
 	/**
 	 * Get all required footer elements for the bbBolt iframe and output them
 	 */
-	function get_footer() { ?>
-		<script>
-			jQuery(document).ready(function($){
-				// Hide the loading animation
-			});
-		</script>
+	function get_footer() { 
+		$this->print_scripts();
+		?>
 		</body>
 		</html>
 		<?php

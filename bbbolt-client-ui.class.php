@@ -74,6 +74,7 @@ class bbBolt_Client_UI {
 		global $bbbolt_clients;
 		?>
 		<div id="bbb-support-form">
+			<h2 class="bbbolt-title"><?php _e( 'Get Support', 'bbbolt' ); ?></h2>
 		<?php if ( count( $bbbolt_clients ) > 1 ) : ?>
 			<?php $iframe_src = 'about:blank'; ?>
 			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
@@ -244,7 +245,12 @@ class bbBolt_Client_UI {
 				$('#bbb-form-loading, #bbb-inbox-loading').hide();
 				// Resize form to fit content without causing an iframe cross domain error
 				if(document.location.hostname == $(this).attr('src').substring(7,7+document.location.hostname.length)) {
-					$(this).height($(this).contents().find('html').height());
+					// Enforce a minimum size of 400 as required by Paypal Popup
+					var new_height = 400;
+					if($(this).contents().find('html').height() > 400){
+						new_height = $(this).contents().find('html').height();
+					}
+					$(this).height(new_height);
 				} else { // Just make it tall
 					$(this).height('600px');
 				}
