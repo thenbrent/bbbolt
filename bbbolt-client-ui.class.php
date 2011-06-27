@@ -35,15 +35,19 @@ class bbBolt_Client_UI {
 	}
 
 	/**
-	 * 
+	 * Output the Support Inbox Administration Page for the Current User
 	 **/
 	public function support_inbox(){
 		global $bbbolt_clients;
 
+		$topics = $this->fetch_support_cases();
+
 		$columns = array(
-				'name' => 'Name',
-				'subject' => 'Subject',
-				'date' => 'Date'
+				'author' => 'Author',
+				'subject' => 'Topic',
+				'content' => 'Message',
+				'date' => 'Freshness',
+				'reply' => 'Reply',
 			);
 		register_column_headers( 'bbbolt-inbox', $columns );
 		?>
@@ -64,9 +68,13 @@ class bbBolt_Client_UI {
 				$results = $wpdb->get_results($sql);
 				if( count( $results ) > 0 ) {
 					foreach( $results as $result ) {
-						echo "<tr>
-							<td>".$result->post_author."</td><td>".$result->post_title."</td><td>".$result->post_date."</td>
-							</tr>";
+						echo "<tr>".
+								"<td>".$result->post_author."</td>".
+								"<td>".$result->post_title."</td>".
+								"<td>".$result->post_content."</td>".
+								"<td>".sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( $result->post_date ), current_time( 'timestamp' ) ) )."</td>".
+								"<td>".$result->guid."</td>".
+							"</tr>";
 					}				
 				}
 				?>
@@ -116,6 +124,57 @@ class bbBolt_Client_UI {
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
+	}
+
+
+	/**
+	 * Fetch the topics & replies for a user.
+	 *
+	 * @param user_id, optional, default currently logged in user. If no user ID is supplied, all support cases are returned.
+	 */
+	private function fetch_support_cases( $user_id = '' ) {
+		global $forums_feed_url, $topics_feed_url;
+
+		?>
+		<div class="wrap">
+		<?php
+		$forums = fetch_feed( $forums_feed_url );
+		echo '<h1>Forums</h1>';
+		foreach( $forums->get_items() as $item ){ ?>
+			<div class="item">
+				<h2><a href="<?php echo $item->get_permalink(); ?>"><?php echo $item->get_title(); ?></a></h2>
+				<p><?php echo $item->get_description(); ?></p>
+				<p><small>Posted by <?php echo $item->get_author()->get_name(); ?> on <?php echo $item->get_date('j F Y | g:i a'); ?></small></p>
+			</div>
+		<?php }
+
+		$topics = fetch_feed( $topics_feed_url );
+		echo '<h1>Topics</h1>';
+		foreach( $topics->get_items() as $item ){ ?>
+			<div class="item">
+				<h2><a href="<?php echo $item->get_permalink(); ?>"><?php echo $item->get_title(); ?></a></h2>
+				<p><?php echo $item->get_description(); ?></p>
+				<p><small>Posted by <?php echo $item->get_author()->get_name(); ?> on <?php echo $item->get_date('j F Y | g:i a'); ?></small></p>
+			</div>
+		<?php } ?>
+		</div>
+		<?php
+	}
+
+
+	/**
+	 * Set feed cache for support posts to be five minutes. 
+	 * 
+	 * We must shorten the feed cache so that the support inbox updates within a few minutes of a reply being posted. 
+	 * The default feed time is an hour or a day, which is far too long for support. 
+	 */
+	public function shorten_feed_cache_time( $duration, $url ){
+		global $forums_feed_url, $topics_feed_url;
+
+		if( $url == $forums_feed_url || $url == $topics_feed_url )
+			return 300;
+		else
+			return $duration;
 	}
 
 
@@ -240,4 +299,6 @@ class bbBolt_Client_UI {
 		</script>
 	<?php
 	}
+
+
 }
