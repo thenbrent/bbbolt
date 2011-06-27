@@ -95,6 +95,54 @@ class bbBolt_Server {
 
 
 	/**
+	 * Routes requests and chooses which view to display
+	 */
+	function request_handler(){
+		global $wp_query, $bbb_message;
+
+		// Don't touch non bbbolt queries
+		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
+			return;
+
+		// New user Registration
+		if( isset( $_POST['bbb-registration'] ) ) {
+
+			$this->register_user();
+
+		} elseif( isset( $_POST['bbb_topic_submit'] ) ) {
+
+			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
+			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
+			bbp_new_topic_handler();
+
+		} else {
+
+			// Page View
+			$this->get_header();
+
+			// Get the user to login or signup
+			if( ! is_user_logged_in() ) {
+
+				$this->signup_process();
+
+			} elseif( $wp_query->query_vars['bbbolt'] == 'inbox' ) {
+
+				$this->support_inbox();
+
+			} else { // Default to new topic form
+
+				$this->support_form();
+
+			}
+
+			$this->get_footer();
+
+		}
+		exit;
+	}
+
+
+	/**
 	 * Takes care of the signup user flow.
 	 */
 	function signup_process(){ 
@@ -148,6 +196,9 @@ class bbBolt_Server {
 		<?php $this->login_form(); ?>
 		<?php
 	}
+
+
+	/* TEMPLATE FUNCTIONS */
 
 
 	/**
@@ -263,50 +314,119 @@ class bbBolt_Server {
 
 
 	/**
-	 * Routes requests and chooses which view to display
+	 * Display the support form
 	 */
-	function request_handler(){
-		global $wp_query, $bbb_message;
+	function support_form() {
+		global $bbb_message; ?>
 
-		// Don't touch non bbbolt queries
-		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
-			return;
+		<h3><?php _e( "New Ticket", 'bbbolt' ); ?></h3>
 
-		// New user Registration
-		if( isset( $_POST['bbb-registration'] ) ) {
+		<?php if( isset( $bbb_message ) ) : ?>
+			<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
+		<?php endif; ?>
 
-			$this->register_user();
+		<?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
-		} elseif( isset( $_POST['bbb_topic_submit'] ) ) {
+			<?php if ( ( !bbp_is_forum_category() && ( !bbp_is_forum_closed() || current_user_can( 'edit_forum', bbp_get_topic_forum_id() ) ) ) || bbp_is_topic_edit() ) : ?>
 
-			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
-			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
-			bbp_new_topic_handler();
+				<div id="new-topic-<?php bbp_topic_id(); ?>" class="bbp-topic-form">
 
-		} else {
+					<form id="new-post" name="new-post" method="post" action="">
 
-			// Page View
-			$this->get_header();
+							<?php do_action( 'bbp_template_notices' ); ?>
 
-			// Get the user to login or signup
-			if( ! is_user_logged_in() ) {
+							<div>
+								<?php if ( ! bbp_is_forum() && bbp_get_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ) != 'No forums available' ) : ?>
+									<p>
+										<label for="bbp_forum_id"><?php _e( 'Forum:', 'bbbolt' ); ?></label><br />
+										<?php bbp_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ); ?>
+									</p>
+								<?php endif; ?>
 
-				$this->signup_process();
+								<?php bbp_get_template_part( 'bbpress/form', 'anonymous' ); ?>
 
-			} elseif( $wp_query->query_vars['bbbolt'] == 'inbox' ) {
+								<p>
+									<label for="bbp_topic_title"><?php _e( 'Subject:', 'bbbolt' ); ?></label><br />
+									<input type="text" id="bbp_topic_title" value="<?php bbp_form_topic_title(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_title" />
+								</p>
 
-				$this->support_inbox();
+								<p>
+									<label for="bbp_topic_content"><?php _e( 'Message:', 'bbbolt' ); ?></label><br />
+									<textarea id="bbp_topic_content" tabindex="<?php bbp_tab_index(); ?>" name="bbp_topic_content" cols="51" rows="6"><?php bbp_form_topic_content(); ?></textarea>
+								</p>
 
-			} else { // Default to new topic form
+								<?php if ( current_user_can( 'unfiltered_html' ) ) : ?>
 
-				require_once( 'dont-panic.php' );
+									<div class="bbp-template-notice">
+										<p><?php _e( 'You can post unrestricted HTML content.', 'bbbolt' ); ?></p>
+									</div>
 
-			}
+								<?php endif; ?>
 
-			$this->get_footer();
+								<?php if ( ! bbp_is_topic_edit() ) : ?>
+									<p>
+										<label for="bbp_topic_tags"><?php _e( 'Tags:', 'bbbolt' ); ?></label><br />
+										<input type="text" value="<?php bbp_form_topic_tags(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_tags" id="bbp_topic_tags" />
+									</p>
+								<?php endif; ?>
 
-		}
-		exit;
+								<?php if ( bbp_is_subscriptions_active() && ! bbp_is_anonymous() && ( !bbp_is_topic_edit() || ( bbp_is_topic_edit() && !bbp_is_topic_anonymous() ) ) ) : ?>
+									<p>
+										<input name="bbp_topic_subscription" id="bbp_topic_subscription" type="checkbox" value="bbp_subscribe" <?php bbp_form_topic_subscribed(); ?> tabindex="<?php bbp_tab_index(); ?>" />
+										<?php if ( bbp_is_topic_edit() && ( $post->post_author != bbp_get_current_user_id() ) ) : ?>
+											<label for="bbp_topic_subscription"><?php _e( 'Notify the author of replies via email', 'bbbolt' ); ?></label>
+										<?php else : ?>
+											<label for="bbp_topic_subscription"><?php _e( 'Notify me of replies via email', 'bbbolt' ); ?></label>
+										<?php endif; ?>
+									</p>
+								<?php endif; ?>
+
+								<?php if ( bbp_is_topic_edit() ) : ?>
+									<fieldset>
+										<legend><?php _e( 'Revision', 'bbbolt' ); ?></legend>
+										<div>
+											<input name="bbp_log_topic_edit" id="bbp_log_topic_edit" type="checkbox" value="1" <?php bbp_form_topic_log_edit(); ?> tabindex="<?php bbp_tab_index(); ?>" />
+											<label for="bbp_log_topic_edit"><?php _e( 'Keep a log of this edit:', 'bbbolt' ); ?></label><br />
+										</div>
+
+										<div>
+											<label for="bbp_topic_edit_reason"><?php printf( __( 'Optional reason for editing:', 'bbbolt' ), bbp_get_current_user_name() ); ?></label><br />
+											<input type="text" value="<?php bbp_form_topic_edit_reason(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_edit_reason" id="bbp_topic_edit_reason" />
+										</div>
+									</fieldset>
+								<?php endif; ?>
+
+								<div class="bbp-submit-wrapper">
+									<button type="submit" tabindex="<?php bbp_tab_index(); ?>" id="bbb_topic_submit" name="bbb_topic_submit" class="button-secondary"><?php _e( 'Submit', 'bbbolt' ); ?></button>
+								</div>
+							</div>
+
+							<?php bbp_topic_form_fields(); ?>
+
+					</form>
+				</div>
+
+			<?php elseif ( bbp_is_forum_closed() ) : ?>
+
+				<div id="no-topic-<?php bbp_topic_id(); ?>" class="bbp-no-topic">
+					<h2 class="entry-title"><?php _e( 'Sorry!', 'bbbolt' ); ?></h2>
+					<div class="bbp-template-notice">
+						<p><?php _e( 'This forum is closed to new topics.', 'bbbolt' ); ?></p>
+					</div>
+				</div>
+
+			<?php endif; ?>
+
+		<?php else : ?>
+
+			<div id="no-topic-<?php bbp_topic_id(); ?>" class="bbp-no-topic">
+				<h2 class="entry-title"><?php _e( 'Sorry!', 'bbbolt' ); ?></h2>
+				<div class="bbp-template-notice">
+					<p><?php is_user_logged_in() ? _e( 'You cannot create new topics at this time.', 'bbbolt' ) : _e( 'You must be logged in to create new topics.', 'bbbolt' ); ?></p>
+				</div>
+			</div>
+
+		<?php endif;
 	}
 
 
@@ -376,19 +496,6 @@ class bbBolt_Server {
 		</div>
 		<?php
 	}
-
-
-	/* HELPER FUNCTIONS */
-	
-	/**
-	 * Get the URL for the server
-	 */
-	function get_url(){
-		return $this->bbbolt_url;
-	}
-
-
-	/* TEMPLATE FUNCTIONS */
 
 
 	/**
@@ -499,6 +606,7 @@ class bbBolt_Server {
 		<?php
 	}
 
+
 	/**
 	 * Get all required header elements for the bbBolt iframe and output them
 	 */
@@ -534,6 +642,17 @@ class bbBolt_Server {
 		</body>
 		</html>
 		<?php
+	}
+
+
+	/* HELPER FUNCTIONS */
+
+
+	/**
+	 * Get the URL for the server
+	 */
+	function get_url( $page = 'home' ){
+		return add_query_arg( 'bbbolt', $page, $this->site_url );
 	}
 
 
