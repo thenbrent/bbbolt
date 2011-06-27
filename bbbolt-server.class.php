@@ -91,18 +91,6 @@ class bbBolt_Server {
 		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
-
-		$this->get_bbpress_dir_path();
-
-		// Manually Setup the bbPress admin environment for support inbox
-		if( isset( $_GET['bbbolt'] ) && $_GET['bbbolt'] == 'inbox' ) {
-			//require_once( $this->get_bbpress_dir_path() . '/bbp-admin/bbp-admin.php' );
-//			add_action( 'bbp_init',       'bbp_admin'               );
-//			add_action( 'bbp_admin_init', 'bbp_forums_admin',     9 );
-//			add_action( 'bbp_admin_init', 'bbp_topics_admin',     9 );
-//			add_action( 'bbp_admin_init', 'bbp_replies_admin',    9 );
-//			add_action( 'bbp_admin_init', 'bbp_admin_settings_help' );
-		}
 	}
 
 	function signup_process(){ ?>
@@ -336,7 +324,7 @@ class bbBolt_Server {
 
 			} elseif( $wp_query->query_vars['bbbolt'] == 'inbox' ) {
 
-				require_once( 'support-inbox.php' );
+				$this->support_inbox();
 
 			} else { // Default to new topic form
 
@@ -349,6 +337,57 @@ class bbBolt_Server {
 		}
 		exit;
 	}
+
+
+	/**
+	 * Display the support inbox for the user.
+	 */
+	function support_inbox(){
+		global $current_user;
+
+		$current_user = wp_get_current_user();
+			?>
+			<div class="wrap">
+				<table class="widefat">
+					<thead>
+						<tr>
+							<th id="bbb_freshness"><?php _e( 'Subject', 'bbbolt' ); ?></th>
+							<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
+							<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
+							<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
+						</tr>
+					</thead>
+					<tfoot>
+						<th id="bbb_freshness"><?php _e( 'Subject', 'bbbolt' ); ?></th>
+						<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
+						<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
+						<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
+					</tfoot>
+					<tbody>
+					<?php
+					$topics = query_posts( array( 'post_type' => array( 'topic' ), 'author' => $current_user->ID, 'post_status' => 'publish' ) );
+					error_log('$topics = ' . print_r( $topics, true ) );
+					if( count( $topics ) > 0 ) {
+						foreach( $topics as $topics ) {
+							// Output the topic
+							echo '<tr>'.
+									'<td>' . $result->post_title . '</td>'.
+									'<td>' . $result->post_content . '</td>'.
+									'<td>' . ( ( $result->post_author == $current_user->ID ) ? 'You' : get_userdata( $result->post_author )->display_name ) . '</td>'.
+									'<td>' . sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( $result->post_date ), current_time( 'timestamp' ) ) ) . '</td>'.
+								'</tr>';
+							// Check if there are replies to this topic
+						}
+					} else {
+						echo '<tr><td colspan="5">' . __( 'You have not yet submitted any topics.', 'bbbolt' ) . '</td></tr>';
+					}
+					?>
+				</tbody>
+			</table>
+		</div>
+		<?php
+	}
+
 
 	/* HELPER FUNCTIONS */
 	
@@ -545,13 +584,5 @@ class bbBolt_Server {
 		return sanitize_user( $username[0] );
 	}
 
-
-	/**
-	 * Gets the location of the bbPress plugin. 
-	 */
-	function get_bbpress_dir_path(){
-		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );	// Need get_plugins()
-		error_log("get plugins - " . print_r( array_keys( get_plugins() ), true ) );
-	}
 }
 endif;
