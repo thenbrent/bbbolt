@@ -69,7 +69,7 @@ class bbBolt_Server {
 
 		if( empty( $args['registering_plugin'] ) ){ // Get the handle fo the calling plugin
 			$backtrace = debug_backtrace();
-			$args['registering_plugin'] = basename( dirname( $backtrace[1]['file'] ) ) . '/' . basename( $backtrace[0]['file'] );
+			$args['registering_plugin'] = basename( dirname( $backtrace[1]['file'] ) ) . '/' . basename( $backtrace[1]['file'] );
 		}
 
 		$this->name               = sanitize_key( $name );
@@ -303,11 +303,10 @@ class bbBolt_Server {
 			$this->register_user();
 
 		} elseif( isset( $_POST['bbb_topic_submit'] ) ){
-			error_log('POST = ' . print_r( $_POST, true ) );
 
 			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
-			bbp_new_topic_handler();					
+			bbp_new_topic_handler();
 
 		} else {
 			// Page View
