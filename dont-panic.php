@@ -7,7 +7,7 @@
 global $bbb_message;
 ?>
 
-<h3><?php _e( "Don't Panic", 'bbbolt' ); ?></h3>
+<h3><?php _e( "New Ticket", 'bbbolt' ); ?></h3>
 
 <?php if( isset( $bbb_message ) ) : ?>
 	<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
@@ -20,15 +20,6 @@ global $bbb_message;
 		<div id="new-topic-<?php bbp_topic_id(); ?>" class="bbp-topic-form">
 
 			<form id="new-post" name="new-post" method="post" action="">
-				<fieldset>
-					<legend>
-						<?php
-						if ( bbp_is_topic_edit() )
-							printf( __( 'Edit ticket "%s"', 'bbbolt' ), bbp_get_topic_title() );
-						else
-							bbp_is_forum() ? printf( __( 'Post new ticket in: &ldquo;%s&rdquo;', 'bbbolt' ), bbp_get_forum_title() ) : _e( 'New ticket', 'bbbolt' );
-						?>
-					</legend>
 
 					<?php do_action( 'bbp_template_notices' ); ?>
 
@@ -100,7 +91,6 @@ global $bbb_message;
 
 					<?php bbp_topic_form_fields(); ?>
 
-				</fieldset>
 			</form>
 		</div>
 
