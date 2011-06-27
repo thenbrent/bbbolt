@@ -106,12 +106,9 @@ class bbBolt_Server {
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
-				jQuery(document).ready(function($){
-					if($('.bbbolt-frame', top.document).attr('src') != document.location.href ){
-						$('.register-container', parent.document).fadeTo('fast',1);
-						$('.bbbolt-frame', top.document).attr('src',document.location.href);
-					}
-				});
+				if(parent!=window.top) {
+					parent.location.replace(document.location);
+				}
 			</script>
 
 			<?php if( $_GET['return'] == 'paid' ) {
