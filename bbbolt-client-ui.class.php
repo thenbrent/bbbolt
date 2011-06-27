@@ -79,7 +79,7 @@ class bbBolt_Client_UI {
 			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
 			<ul class="bbb-client-list">
 			<?php foreach( $bbbolt_clients as $client ) : ?>
-				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt-form-frame"><?php echo $client->get_name(); ?></a></li>
+				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url( 'form' ); ?>" target="bbbolt-form-frame"><?php echo $client->get_name(); ?></a></li>
 			<?php endforeach; ?>
 			</ul>
 		<?php else : ?>
@@ -169,7 +169,7 @@ class bbBolt_Client_UI {
 			opacity:0.2;
 			overflow: hidden;
 		}
-		
+
 		img#bbb-form-loading,
 		img#bbb-inbox-loading {
 			display: none;

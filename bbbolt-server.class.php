@@ -91,10 +91,21 @@ class bbBolt_Server {
 		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
+
+		$this->get_bbpress_dir_path();
+
+		// Manually Setup the bbPress admin environment for support inbox
+		if( isset( $_GET['bbbolt'] ) && $_GET['bbbolt'] == 'inbox' ) {
+			//require_once( $this->get_bbpress_dir_path() . '/bbp-admin/bbp-admin.php' );
+//			add_action( 'bbp_init',       'bbp_admin'               );
+//			add_action( 'bbp_admin_init', 'bbp_forums_admin',     9 );
+//			add_action( 'bbp_admin_init', 'bbp_topics_admin',     9 );
+//			add_action( 'bbp_admin_init', 'bbp_replies_admin',    9 );
+//			add_action( 'bbp_admin_init', 'bbp_admin_settings_help' );
+		}
 	}
 
-	function signup_process(){
-		?>
+	function signup_process(){ ?>
 		<div id="register-container">
 		<?php if( ! get_option( 'users_can_register' ) ) : ?>
 
@@ -215,7 +226,7 @@ class bbBolt_Server {
 		<div id="login-container" style="display:none;">
 			<h3><?php _e( 'Login', 'bbbolt' ); ?></h3>
 			<p><?php printf( __( 'Login to the %s support system.', 'bbbolt' ), $this->labels->name ); ?></p>
-			<?php wp_login_form( array( 'redirect' => $this->bbbolt_url ) ); ?>
+			<?php wp_login_form( array( 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
 			<a id="forgot-link" href="<?php echo $this->bbbolt_url ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
 		</div>
 		<div id="forgot-container" style="display:none;">
@@ -284,41 +295,53 @@ class bbBolt_Server {
 
 		$bbb_message = "Your account have been created. Thanks for signing up.";
 
-		$this->get_header();
-		require_once( 'dont-panic.php' );
-		$this->get_footer();
+		//$this->get_header();
+		//require_once( 'dont-panic.php' );
+		//$this->get_footer();
+		// Don't run the registration process again
+		unset( $_POST['bbb-registration'] );
+		$this->request_handler();
 	}
 
 	/**
 	 * Routes requests and chooses which view to display
 	 */
 	function request_handler(){
-		global $wp_query, $bbp, $bbb_message;
+		global $wp_query, $bbb_message;
 
 		// Don't touch non bbbolt queries
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
 		// New user Registration
-		if( ( isset( $_POST['bbb-registration'] ) ) ){
+		if( isset( $_POST['bbb-registration'] ) ) {
 
 			$this->register_user();
 
-		} elseif( isset( $_POST['bbb_topic_submit'] ) ){
+		} elseif( isset( $_POST['bbb_topic_submit'] ) ) {
 
 			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
 			bbp_new_topic_handler();
 
 		} else {
+
 			// Page View
 			$this->get_header();
 
 			// Get the user to login or signup
 			if( ! is_user_logged_in() ) {
+
 				$this->signup_process();
-			} else {
+
+			} elseif( $wp_query->query_vars['bbbolt'] == 'inbox' ) {
+
+				require_once( 'support-inbox.php' );
+
+			} else { // Default to new topic form
+
 				require_once( 'dont-panic.php' );
+
 			}
 
 			$this->get_footer();
@@ -458,7 +481,7 @@ class bbBolt_Server {
 			wp_die( sprintf( __( 'The %sbbPress plugin%s must be active for %sbbBolt%s to work its magic. bbBolt has been deactivated. %sInstall & activate bbPress%s', 'bbbolt' ), 
 							 '<a href="http://wordpress.org/extend/plugins/bbpress/">', '</a>', 
 							 '<a href="http://bbbolt.org/">', '</a>', 
-							 '<br/><a href="'.admin_url('plugins.php').'">', '&nbsp;&raquo;</a>' 
+							 '<br/><a href="' . admin_url('plugins.php') . '">', '&nbsp;&raquo;</a>' 
 					)
 			);
 		}
@@ -520,6 +543,15 @@ class bbBolt_Server {
 		$username = explode( '@', urldecode( $email ) );
 
 		return sanitize_user( $username[0] );
+	}
+
+
+	/**
+	 * Gets the location of the bbPress plugin. 
+	 */
+	function get_bbpress_dir_path(){
+		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );	// Need get_plugins()
+		error_log("get plugins - " . print_r( array_keys( get_plugins() ), true ) );
 	}
 }
 endif;
