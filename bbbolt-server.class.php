@@ -107,7 +107,7 @@ class bbBolt_Server {
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
 				if(parent!=window.top) {
-					parent.location.replace(document.location);
+					parent.location.href = document.location;
 				}
 			</script>
 
