@@ -104,9 +104,9 @@ class bbBolt_Server {
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
 				jQuery(document).ready(function($){
-					if($('#bbbolt_frame', top.document).attr('src') != document.location.href ){
-						$('#register-container', parent.document).fadeTo('fast',1);
-						$('#bbbolt_frame', top.document).attr('src',document.location.href);
+					if($('.bbbolt-frame', top.document).attr('src') != document.location.href ){
+						$('.register-container', parent.document).fadeTo('fast',1);
+						$('.bbbolt-frame', top.document).attr('src',document.location.href);
 					}
 				});
 			</script>
@@ -438,8 +438,8 @@ class bbBolt_Server {
 		<script>
 			jQuery(document).ready(function($){
 				// Hide the loading animation
-				$('#bbbolt_frame', top.document ).removeClass('loading');
-				$('#loading', top.document ).hide();
+				$('.bbbolt-frame', top.document ).removeClass('loading');
+				$('#bbb-form-loading, #bbb-inbox-loading', top.document ).hide();
 			});
 		</script>
 		</body>
