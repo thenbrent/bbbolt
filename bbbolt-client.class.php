@@ -25,17 +25,26 @@ class bbBolt_Client {
 
 		$this->name          = sanitize_key( $name );
 		$this->labels        = (object)$args['labels'];
+		$this->site_url      = $args['site_url'];
 		$this->bbbolt_url    = $args['site_url'] . '?bbbolt';
 
 		bbBolt_Client_UI::singleton();
 	}
 
+	/** 
+	 * Get the public label for this client
+	 */
 	public function get_name() {
 		return $this->labels->name;
 	}
 
-	public function get_url() {
-		return $this->bbbolt_url;
+	/** 
+	 * Get different URLs on the bbBolt Server
+	 * 
+	 * @param $page, optional, default home, a specific page on the bbBolt Server to load
+	 */
+	public function get_url( $page = 'home' ) {
+		return add_query_arg( 'bbbolt', $page, $this->site_url );
 	}
 }
 endif;
