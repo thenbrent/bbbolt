@@ -45,8 +45,8 @@ class bbBolt_Server {
 			'paypal'   => array( // Global details for PayPal
 				'sandbox'      => true,
 				'currency'     => 'USD',
-				'cancel_url'   => add_query_arg( array( 'bbbolt'=> 1, 'return' => 'cancel' ), site_url() ),
-				'return_url'   => add_query_arg( array( 'bbbolt'=> 1, 'return' => 'paid' ), site_url() ),
+				'cancel_url'   => add_query_arg( array( 'bbbolt'=> 'paypal', 'return' => 'cancel' ), site_url( '/' ) ),
+				'return_url'   => add_query_arg( array( 'bbbolt'=> 'paypal', 'return' => 'paid' ), site_url( '/' ) ),
 				'subscription' => array(
 					'start_date'         => date( 'Y-m-d\TH:i:s', time() + ( 24 * 60 * 60 ) ),
 					'description'        => get_bloginfo( 'name' ) . __( ' Support Subscription', 'bbbolt' ),
@@ -93,14 +93,16 @@ class bbBolt_Server {
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
 	}
 
-	function signup_process(){ ?>
+	function signup_process(){ 
+		global $wp_query;
+		?>
 		<div id="register-container">
 		<?php if( ! get_option( 'users_can_register' ) ) : ?>
 
 			<h3><?php printf( __( 'Registrations for %s are Closed', 'bbbolt' ), $this->labels->name ); ?></h3>
 			<p><?php printf( __( 'Please contact the %s developers to request they open registration on %s.', 'bbbolt' ), $this->labels->name, '<a href="'.$this->site_url.'">'.$this->site_url.'</a>' ); ?></p>
 
-		<?php elseif( isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
+		<?php elseif( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
