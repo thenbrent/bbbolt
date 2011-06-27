@@ -1,6 +1,7 @@
 <?php 
 
 
+if( ! class_exists( 'bbBolt_Client_UI' ) ) :
 /**
  * bbBolt UI Singleton
  * 
@@ -230,11 +231,17 @@ class bbBolt_Client_UI {
 				$('#bbbolt-form-frame').addClass('loading');
 				$('#bbb-form-loading').show();
 			});
-
+			
 			// Loading animation for inbox iframe
 			$('#bbb-support-inbox .bbb-client-list a').click(function(){
 				$('#bbbolt-inbox-frame').addClass('loading');
 				$('#bbb-inbox-loading').show();
+			});
+
+			// Finish loading animation on frames
+			$('.bbbolt-frame').load(function(){
+				$(this).removeClass('loading');
+				$('#bbb-form-loading, #bbb-inbox-loading').hide();
 			});
 		});
 		</script>
@@ -243,3 +250,4 @@ class bbBolt_Client_UI {
 
 
 }
+endif;
