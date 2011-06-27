@@ -40,47 +40,31 @@ class bbBolt_Client_UI {
 	public function support_inbox(){
 		global $bbbolt_clients;
 
-		$topics = $this->fetch_support_cases();
-
-		$columns = array(
-				'author' => 'Author',
-				'subject' => 'Topic',
-				'content' => 'Message',
-				'date' => 'Freshness',
-				'reply' => 'Reply',
-			);
-		register_column_headers( 'bbbolt-inbox', $columns );
 		?>
-		<div class="wrap">
+		<div id="bbb-support-inbox" class="wrap">
 			<?php screen_icon( 'users' ); ?>
 			<h2><?php _e( 'Support Inbox', 'bbbolt' ); ?></h2>
-			<table class="widefat">
-				<thead>
-					<tr><?php print_column_headers( 'bbbolt-inbox' ); ?></tr>
-				</thead>
-				<tfoot>
-					<tr><?php print_column_headers( 'bbbolt-inbox', false ); ?></tr>
-				</tfoot>
-				<tbody>
-				<?php
-				global $wpdb;
-				$sql = "SELECT * FROM $wpdb->posts where 1";
-				$results = $wpdb->get_results($sql);
-				if( count( $results ) > 0 ) {
-					foreach( $results as $result ) {
-						echo "<tr>".
-								"<td>".$result->post_author."</td>".
-								"<td>".$result->post_title."</td>".
-								"<td>".$result->post_content."</td>".
-								"<td>".sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( $result->post_date ), current_time( 'timestamp' ) ) )."</td>".
-								"<td>".$result->guid."</td>".
-							"</tr>";
-					}				
-				}
-				?>
-			</tbody>
-		</table>
-	</div>
+			<div id="bbb-support-inbox">
+				<?php if ( count( $bbbolt_clients ) > 1 ) : ?>
+					<?php $iframe_src = 'about:blank'; ?>
+					<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
+					<ul class="bbb-client-list">
+					<?php foreach( $bbbolt_clients as $client ) : ?>
+						<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt-inbox-frame"><?php echo $client->get_name(); ?></a></li>
+					<?php endforeach; ?>
+					</ul>
+				<?php else : ?>
+				<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
+				<?php endif; ?>
+				<img id="bbb-inbox-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
+				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
+					<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
+				</iframe>
+				<div id="power-bbbolt">
+					Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
+				</div>
+			</div>
+		</div>
 
 	<?php
 	}
@@ -92,20 +76,20 @@ class bbBolt_Client_UI {
 	public function support_form(){
 		global $bbbolt_clients;
 		?>
-		<div id="bbb_support_form">
+		<div id="bbb-support-form">
 		<?php if ( count( $bbbolt_clients ) > 1 ) : ?>
 			<?php $iframe_src = 'about:blank'; ?>
 			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
-			<ul id="bbb_client_list">
+			<ul class="bbb-client-list">
 			<?php foreach( $bbbolt_clients as $client ) : ?>
-				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt_frame"><?php echo $client->get_name(); ?></a></li>
+				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt-form-frame"><?php echo $client->get_name(); ?></a></li>
 			<?php endforeach; ?>
 			</ul>
 		<?php else : ?>
 		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 		<?php endif; ?>
-			<img id="loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
-			<iframe id="bbbolt_frame" name="bbbolt_frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
+			<img id="bbb-form-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
+			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
@@ -119,8 +103,8 @@ class bbBolt_Client_UI {
 	 * WordPress Administration.
 	 **/
 	public function support_form_slider() { ?>
-		<div id="bbb_support_slider">
-			<div id="bbb_support_toggle"><a href="#">&lt;</a></div>
+		<div id="bbb-support-slider">
+			<div id="bbb-support-toggle"><a href="#">&lt;</a></div>
 			<?php $this->support_form(); ?>
 		</div>
 	<?php
@@ -134,7 +118,7 @@ class bbBolt_Client_UI {
 	 **/
 	public function print_styles() { ?>
 		<style>
-		#bbb_support_slider {
+		#bbb-support-slider {
 			height: 100%;
 			width:460px;
 			position: fixed;
@@ -142,7 +126,7 @@ class bbBolt_Client_UI {
 			top: 0;
 		}
 
-		#bbb_support_slider #bbb_support_toggle {
+		#bbb-support-slider #bbb-support-toggle {
 			background: #ECECEC;
 			border: 1px solid #CCC;
 			font-family: Arial, Helvetica, Verdana, sans-serif;
@@ -165,12 +149,12 @@ class bbBolt_Client_UI {
 			z-index: 49;
 		}
 
-		#bbb_support_slider #bbb_support_toggle a {
+		#bbb-support-slider #bbb-support-toggle a {
 			font-weight: bold;
 			text-decoration: none;
 		}
 
-		#bbb_support_slider #bbb_support_form {
+		#bbb-support-slider #bbb-support-form {
 			background: #ECECEC;
 			border: 1px solid #CCC;
 			height: 100%;
@@ -184,11 +168,12 @@ class bbBolt_Client_UI {
 			z-index: 50;
 		}
 		
-		#bbbolt_frame.loading {
+		.bbbolt-frame.loading {
 			opacity:0.2;
 		}
 		
-		img#loading {
+		img#bbb-form-loading,
+		img#bbb-inbox-loading {
 			display: none;
 			position: absolute;
 			top: 30%;
@@ -196,12 +181,12 @@ class bbBolt_Client_UI {
 			z-index: 999;
 		}
 
-		#bbb_client_list {
+		.bbb-client-list {
 			border-bottom: 1px solid #CCC;
 			padding-bottom: 10px;
 		}
 
-		#bbb_client_list li {
+		.bbb-client-list li {
 			display: inline-block;
 			list-style-type: none;
 			margin-right: 10px;
@@ -219,6 +204,7 @@ class bbBolt_Client_UI {
 	<?php
 	}
 
+
 	/**
 	 * Javascript included in the admin footer to make the bbBolt support slider more dynamic.
 	 **/
@@ -226,23 +212,29 @@ class bbBolt_Client_UI {
 		<script>
 		jQuery(document).ready(function($) {
 			// Sliding Support Form
-			$('#bbb_support_slider #bbb_support_toggle').click(function() {
-				var $righty = $('#bbb_support_slider');
+			$('#bbb-support-slider #bbb-support-toggle').click(function() {
+				var $righty = $('#bbb-support-slider');
 				$righty.animate({ right: parseInt($righty.css('right'),10) == 0 ? -$righty.outerWidth() : 0});
-				if($('#bbb_support_toggle a').text() == '<'){
-					$('#bbb_support_toggle a').text('>');
+				if($('#bbb-support-toggle a').text() == '<'){
+					$('#bbb-support-toggle a').text('>');
 					$('#wpcontent, #adminmenuwrap, #footer').fadeTo('fast',0.4);
 				} else {
-					$('#bbb_support_toggle a').text('<')
+					$('#bbb-support-toggle a').text('<')
 					$('#wpcontent, #adminmenuwrap, #footer').fadeTo('fast',1);
 				}
 				return false;
 			});
 
-			// Loading animation for iframe
-			$('#bbb_client_list a').click(function(){
-				$('#bbbolt_frame').addClass('loading');
-				$('#loading').show();
+			// Loading animation for form iframe
+			$('#bbb-support-form .bbb-client-list a').click(function(){
+				$('#bbbolt-form-frame').addClass('loading');
+				$('#bbb-form-loading').show();
+			});
+
+			// Loading animation for inbox iframe
+			$('#bbb-support-inbox .bbb-client-list a').click(function(){
+				$('#bbbolt-inbox-frame').addClass('loading');
+				$('#bbb-inbox-loading').show();
 			});
 		});
 		</script>
