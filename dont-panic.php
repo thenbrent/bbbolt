@@ -13,9 +13,6 @@ global $bbb_message;
 	<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
 <?php endif; ?>
 
-<?php do_action( 'bbp_template_notices' ); ?>
-
-
 <?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
 
 	<?php if ( ( !bbp_is_forum_category() && ( !bbp_is_forum_closed() || current_user_can( 'edit_forum', bbp_get_topic_forum_id() ) ) ) || bbp_is_topic_edit() ) : ?>
@@ -27,17 +24,13 @@ global $bbb_message;
 					<legend>
 						<?php
 						if ( bbp_is_topic_edit() )
-							printf( __( 'Edit ticket "%s"', 'bbpress' ), bbp_get_topic_title() );
+							printf( __( 'Edit ticket "%s"', 'bbbolt' ), bbp_get_topic_title() );
 						else
 							bbp_is_forum() ? printf( __( 'Post new ticket in: &ldquo;%s&rdquo;', 'bbbolt' ), bbp_get_forum_title() ) : _e( 'New ticket', 'bbbolt' );
 						?>
 					</legend>
 
-					<?php if ( !bbp_is_topic_edit() && bbp_is_forum_closed() ) : ?>
-						<div class="bbp-template-notice">
-							<p><?php _e( 'This forum is marked as closed to new topics, however your posting capabilities still allow you to do so.', 'bbbolt' ); ?></p>
-						</div>
-					<?php endif; ?>
+					<?php do_action( 'bbp_template_notices' ); ?>
 
 					<div>
 						<?php if ( ! bbp_is_forum() && bbp_get_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ) != 'No forums available' ) : ?>
@@ -50,7 +43,7 @@ global $bbb_message;
 						<?php bbp_get_template_part( 'bbpress/form', 'anonymous' ); ?>
 
 						<p>
-							<label for="bbp_topic_title"><?php _e( 'Subject:', 'bbpress' ); ?></label><br />
+							<label for="bbp_topic_title"><?php _e( 'Subject:', 'bbbolt' ); ?></label><br />
 							<input type="text" id="bbp_topic_title" value="<?php bbp_form_topic_title(); ?>" tabindex="<?php bbp_tab_index(); ?>" size="40" name="bbp_topic_title" />
 						</p>
 
@@ -58,6 +51,14 @@ global $bbb_message;
 							<label for="bbp_topic_content"><?php _e( 'Message:', 'bbbolt' ); ?></label><br />
 							<textarea id="bbp_topic_content" tabindex="<?php bbp_tab_index(); ?>" name="bbp_topic_content" cols="51" rows="6"><?php bbp_form_topic_content(); ?></textarea>
 						</p>
+
+						<?php if ( current_user_can( 'unfiltered_html' ) ) : ?>
+
+							<div class="bbp-template-notice">
+								<p><?php _e( 'You can post unrestricted HTML content.', 'bbbolt' ); ?></p>
+							</div>
+
+						<?php endif; ?>
 
 						<?php if ( ! bbp_is_topic_edit() ) : ?>
 							<p>
