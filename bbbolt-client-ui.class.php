@@ -242,16 +242,10 @@ class bbBolt_Client_UI {
 				// Finish loading animation on frames
 				$(this).removeClass('loading');
 				$('#bbb-form-loading, #bbb-inbox-loading').hide();
-				// Resize form to fit content
-				console.log(document.location.hostname);
-				console.log($(this).attr('src'));
-				console.log(document.location.hostname.length);
-				console.log($(this).attr('src').substring(7,7+document.location.hostname.length));
-				if(document.location.hostname == $(this).attr('src').substring(7,document.location.hostname.length)) {
-					console.log('** dynamically resizing based on html height');
+				// Resize form to fit content without causing an iframe cross domain error
+				if(document.location.hostname == $(this).attr('src').substring(7,7+document.location.hostname.length)) {
 					$(this).height($(this).contents().find('html').height());
 				} else { // Just make it tall
-					console.log('** manual resize to 600px');
 					$(this).height('600px');
 				}
 			});
