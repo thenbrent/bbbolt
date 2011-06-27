@@ -31,3 +31,13 @@ function tp_register_another_client(){
 }
 add_action( 'init', 'tp_register_another_client' );
 
+
+function tp_register_yet_another_client(){
+	if( function_exists( 'register_bbbolt_client' ) ){
+		$args = array( 'site_url' => 'http://test.brentshepherd.com/' );
+
+		register_bbbolt_client( 'Brent Shepherd.com', $args );
+	}	
+}
+add_action( 'init', 'tp_register_yet_another_client' );
+

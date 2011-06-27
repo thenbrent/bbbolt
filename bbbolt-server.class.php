@@ -355,6 +355,7 @@ class bbBolt_Server {
 							<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
 							<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
 							<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
+							<th id="bbb_freshness"><?php _e( 'Reply', 'bbbolt' ); ?></th>
 						</tr>
 					</thead>
 					<tfoot>
@@ -362,25 +363,42 @@ class bbBolt_Server {
 						<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
 						<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
 						<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
+						<th id="bbb_freshness"><?php _e( 'Reply', 'bbbolt' ); ?></th>
 					</tfoot>
 					<tbody>
 					<?php
-					$topics = query_posts( array( 'post_type' => array( 'topic' ), 'author' => $current_user->ID, 'post_status' => 'publish' ) );
-					error_log('$topics = ' . print_r( $topics, true ) );
-					if( count( $topics ) > 0 ) {
-						foreach( $topics as $topics ) {
+					$topics = new WP_Query( array( 'post_type' => array( 'topic' ), 'author' => $current_user->ID, 'post_status' => 'publish' ) );
+					if( $topics->have_posts() ) : 
+						while( $topics->have_posts() ) : $topics->the_post();
 							// Output the topic
+							$topic_reply_url = get_permalink() . '#new-post';
 							echo '<tr>'.
-									'<td>' . $result->post_title . '</td>'.
-									'<td>' . $result->post_content . '</td>'.
-									'<td>' . ( ( $result->post_author == $current_user->ID ) ? 'You' : get_userdata( $result->post_author )->display_name ) . '</td>'.
-									'<td>' . sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( $result->post_date ), current_time( 'timestamp' ) ) ) . '</td>'.
+									'<td>' . get_the_title() . '</td>'.
+									'<td>' . get_the_content() . '</td>'.
+									'<td>' . ( ( get_the_author() == $current_user->display_name ) ? 'You' : get_the_author() ) . '</td>'.
+									'<td>' . sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( get_the_date() ), current_time( 'timestamp' ) ) ) . '</td>'.
+									'<td><a href="' . $topic_reply_url . '" target="_blank">' . __( 'Reply', 'bbbolt' ) . '&nbsp;&raquo;</a></td>'.
 								'</tr>';
 							// Check if there are replies to this topic
-						}
-					} else {
-						echo '<tr><td colspan="5">' . __( 'You have not yet submitted any topics.', 'bbbolt' ) . '</td></tr>';
-					}
+							$replies = new WP_Query( array( 'post_type' => array( 'reply' ), 'post_parent' => get_the_ID(), 'post_status' => 'publish' ) );
+							if( $replies->have_posts() ) : 
+								while( $replies->have_posts() ) : $replies->the_post();
+									// Output the Reply
+									echo '<tr>'.
+											'<td class="reply-title">&#8212;&nbsp;' . __( 'Reply:', 'bbbolt' ) . '</td>'.
+											'<td>' . get_the_content() . '</td>'.
+											'<td>' . ( ( get_the_author() == $current_user->display_name ) ? 'You' : get_the_author() ) . '</td>'.
+											'<td>' . sprintf( __( '%s ago', 'bbbolt' ), human_time_diff( strtotime( get_the_date() ), current_time( 'timestamp' ) ) ) . '</td>'.
+											'<td><a href="' . $topic_reply_url . '" target="_blank">' . __( 'Reply', 'bbbolt' ) . '&nbsp;&raquo;</a></td>'.
+										'</tr>';
+								endwhile;
+							else :
+								echo '<tr><td class="no-replies" colspan="5">' . __( 'No replies yet.', 'bbbolt' ) . '</td></tr>';
+							endif;
+						endwhile;
+					else :
+						echo '<tr><td class="no-topics" colspan="5">' . __( 'You have not yet submitted any topics.', 'bbbolt' ) . '</td></tr>';
+					endif;
 					?>
 				</tbody>
 			</table>
@@ -462,6 +480,14 @@ class bbBolt_Server {
 			.message {
 				background-color: lightYellow;
 				border-color: #E6DB55;
+			}
+			/* Support Inbox */
+			.widefat td.no-topics {
+				padding-left: 1em;
+			}
+			.widefat td.no-replies,
+			.widefat td.reply-title {
+				padding-left: 3em;
 			}
 		</style>
 	<?php
