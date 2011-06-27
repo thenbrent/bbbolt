@@ -1,8 +1,13 @@
 <?php
 
-
+if( ! class_exists( 'bbBolt_Client' ) ) :
 /**
- * Class 
+ * The bbBolt Client. Most of the work is done in the bbBolt_Client_UI singleton class. 
+ * 
+ * This class houses the custom settings for each client, like name & url. It then creates
+ * an instance of the bbBolt_Client_UI to ensure the relevant UI elements are in place.
+ * 
+ * Called by @see register_bbbolt_client()
  **/
 class bbBolt_Client {
 
@@ -33,5 +38,4 @@ class bbBolt_Client {
 		return $this->bbbolt_url;
 	}
 }
-
-
+endif;
