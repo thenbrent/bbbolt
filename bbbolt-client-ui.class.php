@@ -128,57 +128,6 @@ class bbBolt_Client_UI {
 
 
 	/**
-	 * Fetch the topics & replies for a user.
-	 *
-	 * @param user_id, optional, default currently logged in user. If no user ID is supplied, all support cases are returned.
-	 */
-	private function fetch_support_cases( $user_id = '' ) {
-		global $forums_feed_url, $topics_feed_url;
-
-		?>
-		<div class="wrap">
-		<?php
-		$forums = fetch_feed( $forums_feed_url );
-		echo '<h1>Forums</h1>';
-		foreach( $forums->get_items() as $item ){ ?>
-			<div class="item">
-				<h2><a href="<?php echo $item->get_permalink(); ?>"><?php echo $item->get_title(); ?></a></h2>
-				<p><?php echo $item->get_description(); ?></p>
-				<p><small>Posted by <?php echo $item->get_author()->get_name(); ?> on <?php echo $item->get_date('j F Y | g:i a'); ?></small></p>
-			</div>
-		<?php }
-
-		$topics = fetch_feed( $topics_feed_url );
-		echo '<h1>Topics</h1>';
-		foreach( $topics->get_items() as $item ){ ?>
-			<div class="item">
-				<h2><a href="<?php echo $item->get_permalink(); ?>"><?php echo $item->get_title(); ?></a></h2>
-				<p><?php echo $item->get_description(); ?></p>
-				<p><small>Posted by <?php echo $item->get_author()->get_name(); ?> on <?php echo $item->get_date('j F Y | g:i a'); ?></small></p>
-			</div>
-		<?php } ?>
-		</div>
-		<?php
-	}
-
-
-	/**
-	 * Set feed cache for support posts to be five minutes. 
-	 * 
-	 * We must shorten the feed cache so that the support inbox updates within a few minutes of a reply being posted. 
-	 * The default feed time is an hour or a day, which is far too long for support. 
-	 */
-	public function shorten_feed_cache_time( $duration, $url ){
-		global $forums_feed_url, $topics_feed_url;
-
-		if( $url == $forums_feed_url || $url == $topics_feed_url )
-			return 300;
-		else
-			return $duration;
-	}
-
-
-	/**
 	 * To display the form in an aesthetic, usable way, we need to apply custom styles. 
 	 * 
 	 * This function is hooked to the admin header where it enqueues styles for bbBolt.

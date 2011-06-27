@@ -89,11 +89,6 @@ class bbBolt_Server {
 		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
-
-		// Return all Topics & Replies for bbBolt RSS Queries
-		add_filter( 'option__bbp_topics_per_rss_page', array( &$this, 'increase_items_per_rss_page' ) );
-		add_filter( 'option__bbp_replies_per_rss_page', array( &$this, 'increase_items_per_rss_page' ) );
-		//add_filter( 'post_limits', array( &$this, 'increase_items_per_rss_page' ) ); // Another option that overloads all feeds
 	}
 
 	function signup_process(){
@@ -472,17 +467,6 @@ class bbBolt_Server {
 
 
 	/**
-	 * For bbBolt RSS queries, return all posts, not just those 
-	 */
-	function unlimited_items_per_rss_page( $count ){
-		if ( isset( $query->query_vars['bbbolt'] ) )
-			return -1;
-		else
-			return $count;
-	}
-
-
-	/**
 	 * Because we are hijacking the WordPress template system and delivering our own
 	 * template, WordPress thinks it is a 404 request. This function tells WordPress
 	 * to tell the end user that if the request is for bbbolt, it is not a 404.
@@ -522,7 +506,7 @@ class bbBolt_Server {
 
 
 	/**
-	 * Add avatar query var.
+	 * Add bbBolt query var.
 	 **/
 	function query_var( $vars ) {
 		$vars[] = 'bbbolt';
