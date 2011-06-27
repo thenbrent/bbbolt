@@ -86,7 +86,7 @@ class bbBolt_Client_UI {
 		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 		<?php endif; ?>
 			<img id="bbb-form-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
-			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
+			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%" scrolling="no">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
@@ -168,13 +168,14 @@ class bbBolt_Client_UI {
 		.bbbolt-frame.loading {
 			opacity:0.2;
 			overflow: hidden;
+			min-height: 300px;
 		}
 
 		img#bbb-form-loading,
 		img#bbb-inbox-loading {
 			display: none;
 			position: absolute;
-			top: 25%;
+			top: 30%;
 			left: 25%;
 			z-index: 999;
 		}
@@ -226,12 +227,14 @@ class bbBolt_Client_UI {
 			// Loading animation for form iframe
 			$('#bbb-support-form .bbb-client-list a').click(function(){
 				$('#bbbolt-form-frame').addClass('loading');
+				$('#bbbolt-form-frame').attr('src',$(this).attr('href'));
 				$('#bbb-form-loading').show();
 			});
 
 			// Loading animation for inbox iframe
 			$('#bbb-support-inbox .bbb-client-list a').click(function(){
 				$('#bbbolt-inbox-frame').addClass('loading');
+				$('#bbbolt-inbox-frame').attr('src',$(this).attr('href'));
 				$('#bbb-inbox-loading').show();
 			});
 
@@ -239,9 +242,19 @@ class bbBolt_Client_UI {
 				// Finish loading animation on frames
 				$(this).removeClass('loading');
 				$('#bbb-form-loading, #bbb-inbox-loading').hide();
-				$(this).height($(this).contents().find('html').height());
+				// Resize form to fit content
+				console.log(document.location.hostname);
+				console.log($(this).attr('src'));
+				console.log(document.location.hostname.length);
+				console.log($(this).attr('src').substring(7,7+document.location.hostname.length));
+				if(document.location.hostname == $(this).attr('src').substring(7,document.location.hostname.length)) {
+					console.log('** dynamically resizing based on html height');
+					$(this).height($(this).contents().find('html').height());
+				} else { // Just make it tall
+					console.log('** manual resize to 600px');
+					$(this).height('600px');
+				}
 			});
-			
 		});
 		</script>
 	<?php
