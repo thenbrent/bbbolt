@@ -1,5 +1,7 @@
 <?php
 
+if( ! class_exists( 'bbBolt_Server' ) ) :
+
 require_once('paypal/paypal-digital-goods.class.php');
 
 /**
@@ -283,7 +285,7 @@ class bbBolt_Server {
 		$bbb_message = "Your account have been created. Thanks for signing up.";
 
 		$this->get_header();
-		require_once( dirname( __FILE__ ) . '/dont-panic.php' );
+		require_once( 'dont-panic.php' );
 		$this->get_footer();
 	}
 
@@ -316,7 +318,7 @@ class bbBolt_Server {
 			if( ! is_user_logged_in() ) {
 				$this->signup_process();
 			} else {
-				require_once( dirname( __FILE__ ) . '/dont-panic.php' );
+				require_once( 'dont-panic.php' );
 			}
 
 			$this->get_footer();
@@ -437,8 +439,6 @@ class bbBolt_Server {
 		<script>
 			jQuery(document).ready(function($){
 				// Hide the loading animation
-				$('.bbbolt-frame', top.document ).removeClass('loading');
-				$('#bbb-form-loading, #bbb-inbox-loading', top.document ).hide();
 			});
 		</script>
 		</body>
@@ -522,5 +522,4 @@ class bbBolt_Server {
 		return sanitize_user( $username[0] );
 	}
 }
-
-
+endif;
