@@ -220,7 +220,7 @@ class bbBolt_Server {
 			<form name="lostpasswordform" id="lostpasswordform" action="" method="post">
 				<p>
 					<label><?php _e('Username or E-mail:') ?><br />
-					<input type="text" name="user_login" id="user_login" class="input" value="<?php echo esc_attr($user_login); ?>" size="20" tabindex="10" />
+					<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" />
 				</p>
 			<?php do_action('lostpassword_form'); ?>
 				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
