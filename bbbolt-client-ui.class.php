@@ -40,7 +40,6 @@ class bbBolt_Client_UI {
 	 **/
 	public function support_inbox(){
 		global $bbbolt_clients;
-
 		?>
 		<div id="bbb-support-inbox" class="wrap">
 			<?php screen_icon( 'users' ); ?>
@@ -51,19 +50,16 @@ class bbBolt_Client_UI {
 					<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
 					<ul class="bbb-client-list">
 					<?php foreach( $bbbolt_clients as $client ) : ?>
-						<li>&raquo;&nbsp;<a href="<?php echo $client->get_url(); ?>" target="bbbolt-inbox-frame"><?php echo $client->get_name(); ?></a></li>
+						<li>&raquo;&nbsp;<a href="<?php echo $client->get_url( 'inbox' ); ?>" target="bbbolt-inbox-frame"><?php echo $client->get_name(); ?></a></li>
 					<?php endforeach; ?>
 					</ul>
 				<?php else : ?>
 				<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 				<?php endif; ?>
 				<img id="bbb-inbox-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
-				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
+				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
 					<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 				</iframe>
-				<div id="power-bbbolt">
-					Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
-				</div>
 			</div>
 		</div>
 
@@ -90,7 +86,7 @@ class bbBolt_Client_UI {
 		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 		<?php endif; ?>
 			<img id="bbb-form-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
-			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%">
+			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
@@ -168,16 +164,17 @@ class bbBolt_Client_UI {
 			box-shadow:inset 2px 0px 5px #CCC;
 			z-index: 50;
 		}
-		
+
 		.bbbolt-frame.loading {
 			opacity:0.2;
+			overflow: hidden;
 		}
 		
 		img#bbb-form-loading,
 		img#bbb-inbox-loading {
 			display: none;
 			position: absolute;
-			top: 30%;
+			top: 25%;
 			left: 25%;
 			z-index: 999;
 		}
@@ -231,18 +228,20 @@ class bbBolt_Client_UI {
 				$('#bbbolt-form-frame').addClass('loading');
 				$('#bbb-form-loading').show();
 			});
-			
+
 			// Loading animation for inbox iframe
 			$('#bbb-support-inbox .bbb-client-list a').click(function(){
 				$('#bbbolt-inbox-frame').addClass('loading');
 				$('#bbb-inbox-loading').show();
 			});
 
-			// Finish loading animation on frames
 			$('.bbbolt-frame').load(function(){
+				// Finish loading animation on frames
 				$(this).removeClass('loading');
 				$('#bbb-form-loading, #bbb-inbox-loading').hide();
+				$(this).height($(this).contents().find('html').height());
 			});
+			
 		});
 		</script>
 	<?php
