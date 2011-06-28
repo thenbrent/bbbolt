@@ -628,7 +628,7 @@ class bbBolt_Server {
 	 * Get all required header elements for the bbBolt iframe and output them
 	 */
 	function get_header() {
-		wp_enqueue_script( 'strengthy', get_bbbolt_dir_url().'/js/jquery.plugins.js', array( 'jquery' ) );
+		wp_enqueue_script( 'strengthy', $this->get_dir_url().'/js/jquery.plugins.js', array( 'jquery' ) );
 		?><!DOCTYPE html>
 		<html <?php language_attributes(); ?>>
 		<head>
@@ -676,6 +676,18 @@ class bbBolt_Server {
 			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
 
 		return apply_filters( 'bbbolt_server_url', $url );
+	}
+
+
+	/**
+	 * Returns the URL to the location of this file's parent folder.
+	 * 
+	 * Useful for enqueuing scripts, styles & images without hardcoding the URL. 
+	 * Allows the bbbolt directory to be located anywhere in a plugin.
+	 */
+	function get_dir_url() {
+		$path_after_plugin_dir = explode( 'plugins', dirname( __FILE__ ) );
+		return plugins_url() . $path_after_plugin_dir[1];
 	}
 
 
@@ -756,3 +768,27 @@ class bbBolt_Server {
 
 }
 endif;
+
+
+
+if( ! function_exists( 'register_bbbolt_server' ) ) :
+/**
+ * Register a bbBolt Server for your site. Do not use before init or with init priority later than 10.
+ *
+ * A function for creating a bbBolt server.
+ * 
+ * The function will accept an array (second optional parameter), 
+ * along with a string for the URL of the site running bbPress.
+ *
+ * Optional $args contents:
+ **/
+function register_bbbolt_server( $name, $args = array() ){
+
+	// If you are using a custom bbBolt Server Class, hook into this filter
+	$bbbolt_server_class = apply_filters( 'bbBolt_Server_Class', 'bbBolt_Server' );
+
+	$bbbolt_server = new $bbbolt_server_class( $name, $args );
+}
+endif;
+
+

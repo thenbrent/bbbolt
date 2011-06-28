@@ -7,7 +7,9 @@ Author URI: http://find.brentshepherd.com/
 Version: beta-1
 */
 
-require_once( 'bbbolt.php' );
+
+require_once( 'bbbolt-server.class.php' );
+
 
 function register_test_bbbolt_server(){
 

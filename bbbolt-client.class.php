@@ -1,5 +1,10 @@
 <?php
 
+
+if( ! class_exists( 'bbBolt_Client_UI' ) )
+	require_once( 'bbbolt-client-ui.class.php' );
+
+
 if( ! class_exists( 'bbBolt_Client' ) ) :
 /**
  * The bbBolt Client. Most of the work is done in the bbBolt_Client_UI singleton class. 
@@ -46,5 +51,42 @@ class bbBolt_Client {
 	public function get_url( $page = 'home' ) {
 		return add_query_arg( 'bbbolt', $page, $this->site_url );
 	}
+
+
+	/**
+	 * Returns the URL to the location of this file's parent folder.
+	 * 
+	 * Useful for enqueuing scripts, styles & images without hardcoding the URL. 
+	 * Allows the bbbolt directory to be located anywhere in a plugin.
+	 */
+	public function get_dir_url() {
+		$path_after_plugin_dir = explode( 'plugins', dirname( __FILE__ ) );
+		return plugins_url() . $path_after_plugin_dir[1];
+	}
 }
 endif;
+
+
+if( ! function_exists( 'register_bbbolt_client' ) ) :
+/**
+ * Register a bbBolt client. Do not use before init.
+ *
+ * A function for creating or modifying a bbbolt client pointing to our 
+ * remote WordPress site that is running the bbPress forums & acting as a
+ * bbBolt Server.
+ * 
+ * The function will accept an array (second optional parameter), 
+ * along with a string for the URL of the site running bbPress.
+ *
+ * Optional $args contents:
+ **/
+function register_bbbolt_client( $name, $args = array() ){
+	global $bbbolt_clients;
+
+	// If you are using a custom bbBolt Server Class, hook into this filter
+	$bbbolt_client_class = apply_filters( 'bbBolt_Client_Class', 'bbBolt_Client' );
+
+	$bbbolt_clients[] = new $bbbolt_client_class( $name, $args );
+}
+endif;
+

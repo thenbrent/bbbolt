@@ -7,7 +7,7 @@ Author URI: http://find.brentshepherd.com/
 Version: beta-1
 */
 
-require_once( 'bbbolt.php' );
+require_once( 'bbbolt-client.class.php' );
 
 function ep_register_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
@@ -19,7 +19,7 @@ function ep_register_client(){
 		register_bbbolt_client( 'wicked-sick-plugin', $args );
 	}	
 }
-//add_action( 'init', 'ep_register_client' );
+add_action( 'init', 'ep_register_client' );
 
 
 function ep_register_another_client(){
@@ -29,7 +29,7 @@ function ep_register_another_client(){
 		register_bbbolt_client( 'Wicked Sick Plugin 3.2', $args ); 
 	}	
 }
-//add_action( 'init', 'ep_register_another_client' );
+add_action( 'init', 'ep_register_another_client' );
 
 
 function ep_register_yet_another_client(){

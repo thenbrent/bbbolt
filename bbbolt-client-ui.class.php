@@ -56,13 +56,12 @@ class bbBolt_Client_UI {
 				<?php else : ?>
 				<?php $iframe_src = $bbbolt_clients[0]->get_url( 'inbox' ); ?>
 				<?php endif; ?>
-				<img id="bbb-inbox-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
+				<img id="bbb-inbox-loading" src="<?php echo $bbbolt_clients[0]->get_dir_url(); ?>/images/loader.gif">
 				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
 					<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 				</iframe>
 			</div>
 		</div>
-
 	<?php
 	}
 
@@ -86,13 +85,13 @@ class bbBolt_Client_UI {
 		<?php else : ?>
 		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
 		<?php endif; ?>
-			<img id="bbb-form-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
+			<img id="bbb-form-loading" src="<?php echo $bbbolt_clients[0]->get_dir_url(); ?>/images/loader.gif">
 			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%" scrolling="no">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
 		</div>
-		<?php
+	<?php
 	}
 
 
@@ -263,3 +262,4 @@ class bbBolt_Client_UI {
 
 }
 endif;
+
