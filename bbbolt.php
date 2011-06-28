@@ -4,7 +4,7 @@ bbBolt
 Subscription Driven Support for WordPress Plugin Developers.
 Author: Leonard's Ego
 Author URI: http://leonardsego.com/
-Version: alpha
+Version: beta-1
 Copyright: Leonard's Ego Pty. Ltd.
 License: GPLv2 or later
 */

@@ -4,7 +4,7 @@ Plugin Name: bbBolt Example Server
 Description: A demonstration code for setting up a bbBolt Server.
 Author: Brent Shepherd
 Author URI: http://find.brentshepherd.com/
-Version: pre-alpha
+Version: beta-1
 */
 
 require_once( 'bbbolt.php' );

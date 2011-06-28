@@ -12,7 +12,7 @@ class bbBolt_Client_UI {
 	private static $instance;
 
 	private function __construct() {
-		add_action( 'admin_footer', array( &$this, 'support_form_slider' ) );
+		add_action( 'admin_footer', array( &$this, 'support_slider' ) );
 		add_action( 'admin_footer', array( &$this, 'print_scripts' ) );
 		add_action( 'admin_print_styles', array( &$this, 'print_styles' ) );
 		add_action( 'admin_menu', array( &$this, 'add_menu_page' ) );
@@ -54,7 +54,7 @@ class bbBolt_Client_UI {
 					<?php endforeach; ?>
 					</ul>
 				<?php else : ?>
-				<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
+				<?php $iframe_src = $bbbolt_clients[0]->get_url( 'inbox' ); ?>
 				<?php endif; ?>
 				<img id="bbb-inbox-loading" src="<?php echo get_bbbolt_dir_url(); ?>/images/loader.gif">
 				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
@@ -100,7 +100,7 @@ class bbBolt_Client_UI {
 	 * Define the extra markup required to create a slider on every page of the 
 	 * WordPress Administration.
 	 **/
-	public function support_form_slider() { ?>
+	public function support_slider() { ?>
 		<div id="bbb-support-slider">
 			<div id="bbb-support-toggle"><a href="#">&lt;</a></div>
 			<?php $this->support_form(); ?>
