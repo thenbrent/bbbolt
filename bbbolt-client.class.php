@@ -23,7 +23,7 @@ class bbBolt_Client {
 	public function __construct( $name, $args = array() ){
 
 		$defaults = array(
-			'labels' => array( 'name' => ucfirst( $name ) )
+			'labels' => array( 'name' => ucfirst( $name ), 'singular_name' => ucfirst( $name ) )
 		);
 
 		$args = wp_parse_args($args, $defaults);
@@ -78,7 +78,10 @@ if( ! function_exists( 'register_bbbolt_client' ) ) :
  * The function will accept an array (second optional parameter), 
  * along with a string for the URL of the site running bbPress.
  *
- * Optional $args contents:
+ * @param $name (string)(required) the name of your plugin
+ * @param $args (array) - an array of named arguments including:
+ * 			'site_url' (required) - the URL of your remote bbBolt Server
+ * 			'labels' (optional)(array) - associative array of labels for the client, currently only support 'name' & 'singular_name'
  **/
 function register_bbbolt_client( $name, $args = array() ){
 	global $bbbolt_clients;

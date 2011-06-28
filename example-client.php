@@ -16,7 +16,7 @@ function ep_register_client(){
 			'labels'	=> array( 'name' => 'Whiz Bang Plugin' )
 		);
 
-		register_bbbolt_client( 'wicked-sick-plugin', $args );
+		register_bbbolt_client( 'whiz-bang-plugin', $args );
 	}	
 }
 add_action( 'init', 'ep_register_client' );

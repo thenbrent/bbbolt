@@ -782,12 +782,12 @@ if( ! function_exists( 'register_bbbolt_server' ) ) :
  *
  * Optional $args contents:
  **/
-function register_bbbolt_server( $name, $args = array() ){
+function register_bbbolt_server( $name, $paypal_credentials, $args = array() ){
 
 	// If you are using a custom bbBolt Server Class, hook into this filter
 	$bbbolt_server_class = apply_filters( 'bbBolt_Server_Class', 'bbBolt_Server' );
 
-	$bbbolt_server = new $bbbolt_server_class( $name, $args );
+	$bbbolt_server = new $bbbolt_server_class( $name, $paypal_credentials, $args );
 }
 endif;
 
