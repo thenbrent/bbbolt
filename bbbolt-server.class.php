@@ -182,7 +182,7 @@ class bbBolt_Server {
 			<h3><?php printf( __( 'Sign-Up with %s', 'bbbolt' ), $this->labels->name ); ?></h3>
 			<p><?php printf( __( 'Get exclusive access to premium support and influence over the future of %s.', 'bbbolt' ), $this->labels->name ); ?></p>
 			<p><?php printf( __( 'All for only $%s per %s.', 'bbbolt' ), $this->subscription->amount, $this->subscription->period ); ?></p>
-			<p><?php printf( __( 'To sign-up, you must authorize %s to collect recurring payments via PayPal. You can cancel at anytime.', 'bbbolt' ), $this->labels->name ); ?></p>
+			<p><?php printf( __( 'To sign-up, you must first authorize %s to collect recurring payments via PayPal. You can cancel this subscription at anytime.', 'bbbolt' ), $this->labels->name ); ?></p>
 			<p class="submit">
 				<?php $this->paypal->print_buy_button(); ?>
 			</p>
