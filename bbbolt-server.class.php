@@ -669,6 +669,7 @@ class bbBolt_Server {
 	 * Get the URL for the server
 	 */
 	function get_url( $args = array( 'bbbolt' => 'home' ) ){
+
 		$url = add_query_arg( $args, $this->site_url );
 
 		if( $this->get_messages() )

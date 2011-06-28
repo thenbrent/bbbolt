@@ -1,7 +1,7 @@
 <?php
 /*
-Plugin Name: bbBolt Server Test
-Description: Demonstration code for setting up a bbBolt Server or a plugin to setup a bbBolt server with default settings.
+Plugin Name: bbBolt Example Server
+Description: A demonstration code for setting up a bbBolt Server.
 Author: Brent Shepherd
 Author URI: http://find.brentshepherd.com/
 Version: pre-alpha
