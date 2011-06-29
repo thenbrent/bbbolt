@@ -17,7 +17,7 @@ function eg_register_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
 		$args = array( 'site_url' => 'http://demo.bbbolt.org/' );
 
-		register_bbbolt_client( 'bbBolt.org Demo Support', $args );
+		register_bbbolt_client( 'Demo on bbBolt.org', $args );
 	}	
 }
 add_action( 'init', 'eg_register_client' );
