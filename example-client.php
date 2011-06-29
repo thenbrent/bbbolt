@@ -9,35 +9,29 @@ Version: beta-1
 
 require_once( 'bbbolt-client.class.php' );
 
-function ep_register_client(){
-	if( function_exists( 'register_bbbolt_client' ) ){
-		$args = array( 
-			'site_url'  => 'http://localhost/wp31/',
-			'labels'	=> array( 'name' => 'Whiz Bang Plugin' )
-		);
 
-		register_bbbolt_client( 'whiz-bang-plugin', $args );
+/**
+ * An example of registering a bbBolt Client
+ */
+function eg_register_client(){
+	if( function_exists( 'register_bbbolt_client' ) ){
+		$args = array( 'site_url' => 'http://demo.bbbolt.org/' );
+
+		register_bbbolt_client( 'bbBolt.org Demo Support', $args );
 	}	
 }
-add_action( 'init', 'ep_register_client' );
+add_action( 'init', 'eg_register_client' );
 
 
+/**
+ * Another example for registering a bbBolt Client so the UI shows multiple clients
+ */
 function ep_register_another_client(){
-	if( function_exists( 'register_bbbolt_client' ) ){
-		$args = array( 'site_url' => 'http://localhost/wp32/' );
-
-		register_bbbolt_client( 'Wicked Sick Plugin 3.2', $args ); 
-	}	
-}
-add_action( 'init', 'ep_register_another_client' );
-
-
-function ep_register_yet_another_client(){
 	if( function_exists( 'register_bbbolt_client' ) ){
 		$args = array( 'site_url' => 'http://test.brentshepherd.com/' );
 
-		register_bbbolt_client( 'Remote bbBolt Server', $args );
+		register_bbbolt_client( "Brent's bbBolt Server", $args );
 	}	
 }
-add_action( 'init', 'ep_register_yet_another_client' );
+add_action( 'init', 'ep_register_another_client' );
 

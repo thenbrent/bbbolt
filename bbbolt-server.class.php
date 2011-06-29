@@ -25,13 +25,14 @@ class bbBolt_Server {
 	 * @param $args['site_url'], string default current site's URL,
 	 * @param $args['labels'], array. Name and description of your support system. Default name => Site Title, description => Site Title Support System.
 	 * @param $args['registering_plugin'], default the file and folder of the plugin with calls register_bbbolt_server
-	 * @param $args['subscription']: default 20 USD/month until subscription is cancelled. An array of name => value pairs relating to the subscription.
-	 * 		payment_amount, default 20, the amount of the subscription. Regardless of the specified currency, the format must have decimal point. The decimal point must include exactly 2 digits to the right and an optional thousands separator to the left, which must be a comma. For example, specify EUR 2.000,00 as 2000.00 or 2,000.00. The specified amount cannot exceed USD $10,000.00, regardless of the currency used.
-	 * 		billing_period, default 'Month', the unit to calculate the billing cycle. One of Day, Week, Month, Year.
-	 * 		billing_frequency, default 12, The number of billing periods that make up the billing cycle. Combined with billing_period, must be less than or equal to one year.
-	 * 		billing_total_cycles, default 0, The total number of billing cycles. If you do not specify a value, the payments continue until PayPal (or the buyer) cancels or suspends the profile. A value other than the default of 0 terminates the payments after the specified number of billing cycles. For example billing_total_cycles = 2 with billing_frequency = 12 and billing_period = Month would continue the payments for two years. 
-	 * 		currency_code, default 'USD'
-	 * 		initial_amount, default 0, An optional non-recurring payment made when the recurring payments profile is created.
+	 * @param $args['paypal']:
+	 * 		'currency_code', default 'USD', any ISO-4217 Currency Code (http://en.wikipedia.org/wiki/ISO_4217) which is support by PayPal (http://www.paypalobjects.com/en_US/ebook/PP_NVPAPI_DeveloperGuide/Appx_fieldreference.html)
+	 * 		'subscription'default 20 USD/month until subscription is cancelled. An array of name => value pairs relating to the subscription.
+	 * 			amount, default 20, the amount of the subscription. Regardless of the specified currency, the format must have decimal point. The decimal point must include exactly 2 digits to the right and an optional thousands separator to the left, which must be a comma. For example, specify EUR 2.000,00 as 2000.00 or 2,000.00. The specified amount cannot exceed USD $10,000.00, regardless of the currency used.
+	 * 			period, default 'Month', the unit to calculate the billing cycle. One of Day, Week, Month, Year.
+	 * 			frequency, default 1, The number of billing periods that make up the billing cycle. Combined with period, must be less than or equal to one year.
+	 * 			total_cycles, default 0, The total number of billing cycles. If you do not specify a value, the payments continue until PayPal (or the buyer) cancels or suspends the profile. A value other than the default of 0 terminates the payments after the specified number of billing cycles. For example, with 'total_cycles' = 2, 'frequency' = 12 and 'period' = 'Month' the payments would continue for two years.
+	 * 			initial_amount, default 0, An optional non-recurring payment made when the recurring payments profile is created.
 	 * 
 	 **/
 	function __construct( $name, $paypal_credentials, $args = array() ){
