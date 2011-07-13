@@ -94,7 +94,7 @@ class bbBolt_Server {
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
 
 		// We don't want the WordPress Registration interferring with bbBolt
-		add_filter( 'option_users_can_register', 'users_can_register_override', 100 );
+		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 	}
 
 
@@ -776,7 +776,6 @@ class bbBolt_Server {
 
 }
 endif;
-
 
 
 if( ! function_exists( 'register_bbbolt_server' ) ) :
