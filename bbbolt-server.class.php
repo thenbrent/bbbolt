@@ -92,6 +92,18 @@ class bbBolt_Server {
 		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
+
+		// We don't want the WordPress Registration interferring with bbBolt
+		add_filter( 'option_users_can_register', 'users_can_register_override', 100 );
+	}
+
+
+	/**
+	 * Overrides the value of the 'users_can_register' site option to always 
+	 * return false. This returns false on single & multisite installs due to the hooks priority. 
+	 */
+	function users_can_register_override() {
+		return false;
 	}
 
 
@@ -151,12 +163,7 @@ class bbBolt_Server {
 		global $wp_query;
 		?>
 		<div id="register-container">
-		<?php if( ! get_option( 'users_can_register' ) ) : ?>
-
-			<h3><?php printf( __( 'Registrations for %s are Closed', 'bbbolt' ), $this->labels->name ); ?></h3>
-			<p><?php printf( __( 'Please contact the %s developers to request they open registration on %s.', 'bbbolt' ), $this->labels->name, '<a href="'.$this->site_url.'" target="_blank">'.$this->site_url.'</a>' ); ?></p>
-
-		<?php elseif( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
+		<?php if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
 			<script>
