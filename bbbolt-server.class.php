@@ -81,6 +81,7 @@ class bbBolt_Server {
 		$this->bbbolt_url         = add_query_arg( array( 'bbbolt' => 1 ), $args['site_url'].'/' );
 		$this->registering_plugin = $args['registering_plugin'];
 
+		$this->currency           = $args['paypal']['currency'];
 		$this->subscription       = (object)$args['paypal']['subscription'];
 
 		$this->paypal             = new PayPal_Digital_Goods( $paypal_credentials, $args['paypal'] );
@@ -160,9 +161,14 @@ class bbBolt_Server {
 	 * Takes care of the signup user flow.
 	 */
 	function signup_process(){ 
-		global $wp_query;
+		global $wp_query, $bbb_message;
 		?>
 		<div id="register-container">
+			<ol id="register-progress">
+				<li id="register-step">1. Registration</li>
+				<li id="payment-step">2. Payment</li>
+				<li id="post-step">3. Post a Question</li>
+			</ol>
 		<?php if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
@@ -174,9 +180,14 @@ class bbBolt_Server {
 
 			<?php if( $_GET['return'] == 'paid' ) {
 
-				$checkout_details = $this->paypal->get_checkout_details();
+				$checkout_details = $this->paypal->get_checkout_details(); ?>
 
-				$this->register_form( array( 'username' => $this->make_username_from_email( $checkout_details['EMAIL'] ), 'email' => urldecode( $checkout_details['EMAIL'] ) ) );
+				<h3><?php _e( 'Confirm Your Subscription', 'bbbolt' ); ?></h3>
+				<?php if( isset( $bbb_message ) ) : ?>
+					<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p><
+					<?php endif; ?>
+					<p><?php _e( 'Please enter your account details to complete the subscription.', 'bbbolt' ); ?></p>
+					<?php $this->register_form( array( 'username' => $this->make_username_from_email( $checkout_details
 
 				} elseif( $_GET['return'] == 'cancel' ) { ?>
 
@@ -187,13 +198,9 @@ class bbBolt_Server {
 			<?php } ?>
 		<?php else : // Output Sign-up blurb ?>
 
-			<h3><?php printf( __( 'Sign-Up with %s', 'bbbolt' ), $this->labels->name ); ?></h3>
-			<p><?php printf( __( 'Get exclusive access to premium support and influence over the future of %s.', 'bbbolt' ), $this->labels->name ); ?></p>
-			<p><?php printf( __( 'All for only $%s per %s.', 'bbbolt' ), $this->subscription->amount, $this->subscription->period ); ?></p>
-			<p><?php printf( __( 'To sign-up, you must first authorize %s to collect recurring payments via PayPal. You can cancel this subscription at anytime.', 'bbbolt' ), $this->labels->name ); ?></p>
-			<p class="submit">
-				<?php $this->paypal->print_buy_button(); ?>
-			</p>
+			<p><?php printf( __( 'Get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name ); ?></p>
+			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirect to PayPal to authorised recurring payments for this subscription.', 'bbbolt' ); ?></p>
+			<?php $this->register_form(); ?>
 
 		<?php endif; ?>
 
@@ -216,7 +223,7 @@ class bbBolt_Server {
 	 * Calls the same hooks as the vanilla WordPress registration form to be compatible with 
 	 * other plugins. 
 	 **/
-	function register_form( $credentials ) { 
+	function register_form( $credentials = array() ) { 
 		global $bbb_message;
 		?>
 		<h3><?php _e( 'Confirm Your Subscription', 'bbbolt' ); ?></h3>
@@ -237,13 +244,13 @@ class bbBolt_Server {
 				<label><?php _e( 'Password', 'bbbolt' ) ?></label>
 				<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" />
 			</p>
-			<p><?php printf( __( 'Total: $%s per %s', 'bbbolt' ), $this->subscription->amount, $this->subscription->period ); ?></p>
+			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->subscription_details_string() ); ?></p>
 			<?php do_action( 'register_form' ); ?>
 			<?php wp_nonce_field( __FILE__, 'bbb-nonce' ); ?>
 			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
 			<p class="submit">
-				<input type="submit" name="bbb-registration" id="bbb-registration" class="button-primary" value="<?php esc_attr_e( 'Sign-Up Now', 'bbbolt' ); ?>" tabindex="100" />
-			</p>		
+				<?php $this->paypal->print_buy_button(); ?>
+			</p>
 		</form>
 	<?php
 	}
@@ -271,6 +278,20 @@ class bbBolt_Server {
 			</form>
 		</div>
 	<?php
+	}
+
+
+	/**
+	 * Apply filters to the PayPal objects subscription string.
+	 */
+	function subscription_details_string( $echo = false ){
+
+		$subscription_details = apply_filters( 'bbb_subscription_string', $this->paypal->get_subscription_string, &$this );
+
+		if( $echo )
+			echo $subscription_details;
+
+		return $subscription_details;
 	}
 
 
@@ -535,6 +556,7 @@ class bbBolt_Server {
 			body {
 				padding: 0 10px;
 			}
+			/* Registration Form */
 			#bbb-registerform label,
 			#login-container label {
 				display: inline-block;
@@ -585,6 +607,52 @@ class bbBolt_Server {
 			.message {
 				background-color: lightYellow;
 				border-color: #E6DB55;
+			}
+			/* Registration Progress Tracker */
+			#register-progress {
+				margin-left: 0;
+			}
+			#register-progress li{
+				display: inline-block;
+				position: relative;
+				padding: 3px 10px;
+				border: 1px solid #AAA;
+				color: #767676;
+				-webkit-border-radius:2px;
+				-moz-border-radius:2px;
+				border-radius:2px;
+				margin-right:10px;
+				text-align: center;
+				width: auto;
+				font-size: 0.8em;
+			}
+			#welcome-step:before, #payment-step:before, 
+			#register-step:before {
+				content: "";
+				position: absolute;
+				border-style: solid;
+				display: block; 
+				width: 0;
+				top: -1px;
+				bottom: auto;
+				left: auto;
+				right: -11px;
+				border-width: 11px 0 11px 11px;
+				border-color: transparent #AAA;
+			}
+			#welcome-step:after, #payment-step:after, 
+			#register-step:after {
+				content:"";
+				position: absolute;
+				border-style: solid;
+				display: block; 
+				width: 0;
+				top: 0px;
+				bottom: auto;
+				left: auto;
+				right: -10px;
+				border-width: 10px 0 10px 10px;
+				border-color: transparent #ECECEC;
 			}
 			/* Support Inbox */
 			.widefat td.no-topics {

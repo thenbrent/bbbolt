@@ -78,7 +78,7 @@ if( ! function_exists( 'register_bbbolt_client' ) ) :
  * The function will accept an array (second optional parameter), 
  * along with a string for the URL of the site running bbPress.
  *
- * @param $name (string)(required) the name of your plugin
+ * @param $name (string)(required) the name of your plugin.
  * @param $args (array) - an array of named arguments including:
  * 			'site_url' (required) - the URL of your remote bbBolt Server
  * 			'labels' (optional)(array) - associative array of labels for the client, currently only support 'name' & 'singular_name'
@@ -86,8 +86,8 @@ if( ! function_exists( 'register_bbbolt_client' ) ) :
 function register_bbbolt_client( $name, $args = array() ){
 	global $bbbolt_clients;
 
-	// If you are using a custom bbBolt Server Class, hook into this filter
-	$bbbolt_client_class = apply_filters( 'bbBolt_Client_Class', 'bbBolt_Client' );
+	// If you are using a custom bbBolt Server Class, hook into this filter & return your new class when $name is == your client
+	$bbbolt_client_class = apply_filters( 'bbBolt_Client_Class', 'bbBolt_Client', $name );
 
 	$bbbolt_clients[] = new $bbbolt_client_class( $name, $args );
 }
