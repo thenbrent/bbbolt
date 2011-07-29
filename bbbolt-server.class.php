@@ -52,8 +52,8 @@ class bbBolt_Server {
 					'start_date'         => date( 'Y-m-d\TH:i:s', time() + ( 24 * 60 * 60 ) ),
 					'description'        => get_bloginfo( 'name' ) . __( ' Support Subscription', 'bbbolt' ),
 					// Price of the Subscription
-					'amount'             => '20.00',
-					'initial_amount'     => '0.00',
+					'amount'             => '6.00',
+					'initial_amount'     => '19.00',
 					'average_amount'     => '25',
 					// Temporal Details of the Subscription
 					'period'             => 'Month',
@@ -94,6 +94,9 @@ class bbBolt_Server {
 		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
 
+		// Save the user's credentials when they redirect to PayPal
+		add_action( 'wp_ajax_nopriv_bbb_store_credentials', array( &$this, 'store_credentials' ) );
+
 		// We don't want the WordPress Registration interferring with bbBolt
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 	}
@@ -114,12 +117,15 @@ class bbBolt_Server {
 	function request_handler(){
 		global $wp_query, $bbb_message;
 
+		error_log('******************************************');
+		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
+
 		// Don't touch non bbbolt queries
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
 		// New user Registration
-		if( isset( $_POST['bbb-registration'] ) ) {
+		if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) && $_GET['return'] == 'paid' ) {
 
 			$this->register_user();
 
@@ -165,29 +171,18 @@ class bbBolt_Server {
 		?>
 		<div id="register-container">
 			<ol id="register-progress">
-				<li id="register-step">1. Registration</li>
-				<li id="payment-step">2. Payment</li>
+				<li id="register-step"<?php if( ! isset( $_GET['return'] ) ) echo 'class="current"'; ?>>1. Registration</li>
+				<li id="payment-step"<?php if( isset( $_GET['return'] ) ) echo 'class="current"'; ?>>2. Payment</li>
 				<li id="post-step">3. Post a Question</li>
 			</ol>
 		<?php if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
 
 			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
-			<script>
-				if(parent!=window.top) {
-					parent.location.href = document.location;
-				}
-			</script>
+			<script>if(parent!=window.top) {parent.location.href = document.location;}</script>
 
 			<?php if( $_GET['return'] == 'paid' ) {
 
-				$checkout_details = $this->paypal->get_checkout_details(); ?>
-
-				<h3><?php _e( 'Confirm Your Subscription', 'bbbolt' ); ?></h3>
-				<?php if( isset( $bbb_message ) ) : ?>
-					<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p><
-					<?php endif; ?>
-					<p><?php _e( 'Please enter your account details to complete the subscription.', 'bbbolt' ); ?></p>
-					<?php $this->register_form( array( 'username' => $this->make_username_from_email( $checkout_details
+					$this->support_form();
 
 				} elseif( $_GET['return'] == 'cancel' ) { ?>
 
@@ -198,8 +193,9 @@ class bbBolt_Server {
 			<?php } ?>
 		<?php else : // Output Sign-up blurb ?>
 
-			<p><?php printf( __( 'Get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name ); ?></p>
-			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirect to PayPal to authorised recurring payments for this subscription.', 'bbbolt' ); ?></p>
+			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
+			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirected to PayPal to authorise this subscription.', 'bbbolt' ) ); ?></p>
+			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->subscription_details_string() ); ?></p>
 			<?php $this->register_form(); ?>
 
 		<?php endif; ?>
@@ -213,6 +209,26 @@ class bbBolt_Server {
 		<?php
 	}
 
+	/**
+	 * 
+	 */
+	function store_credentials(){
+
+		if( ! wp_verify_nonce( $_POST['bbb-nonce'], __FILE__ ) ) 
+			die( 'Nonce Security Check Failed. Please try again or contact the site administrator.' );
+
+		if( function_exists( 'mcrypt_ecb' ) )
+			$_POST['bbb-password'] = $this->encrypt( $_POST['bbb-password'] );
+
+		// Store User's Credentials for an Hour
+		set_transient( $_POST['bbb-paypal-token'], array( 'username' => $_POST['bbb-username'], 'password' => $_POST['bbb-password'], 'email' => $_POST['bbb-email'] ), 3600 );
+
+		header( "Content-Type: application/json" );
+		echo json_encode( array( 'success' => true ) );
+		exit();
+	}
+
+
 
 	/* TEMPLATE FUNCTIONS */
 
@@ -223,34 +239,26 @@ class bbBolt_Server {
 	 * Calls the same hooks as the vanilla WordPress registration form to be compatible with 
 	 * other plugins. 
 	 **/
-	function register_form( $credentials = array() ) { 
-		global $bbb_message;
-		?>
-		<h3><?php _e( 'Confirm Your Subscription', 'bbbolt' ); ?></h3>
-		<?php if( isset( $bbb_message ) ) : ?>
-			<div id="message" class="updated fade"><p><strong><?php echo $bbb_message; ?></strong></p></div>
-		<?php endif; ?>
-		<p><?php _e( 'Please enter your account details to complete the subscription.', 'bbbolt' ); ?></p>
+	function register_form( $credentials = array() ) { ?>
 		<form name="bbb-registerform" id="bbb-registerform" action="" method="post">
 			<p>
 				<label><?php _e( 'Username', 'bbbolt' ) ?></label>
-				<input type="text" name="bbb-username" id="bbb-username" class="input" value="<?php echo esc_attr(stripslashes($credentials['username'])); ?>" size="25" tabindex="10" />
+				<input type="text" name="bbb-username" id="bbb-username" class="input" value="<?php if( isset( $credentials['username'] ) ) echo esc_attr( stripslashes( $credentials['username'] ) ); ?>" size="25" tabindex="10" />
 			</p>
 			<p>
 				<label><?php _e( 'E-mail', 'bbbolt' ) ?></label>
-				<input type="text" name="bbb-email" id="bbb-email" class="input" value="<?php echo esc_attr(stripslashes($credentials['email'])); ?>" size="25" tabindex="20" />
+				<input type="text" name="bbb-email" id="bbb-email" class="input" value="<?php if( isset( $credentials['email'] ) ) echo esc_attr( stripslashes( $credentials['email'] ) ); ?>" size="25" tabindex="20" />
 			</p>
 			<p>
 				<label><?php _e( 'Password', 'bbbolt' ) ?></label>
 				<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" />
 			</p>
-			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->subscription_details_string() ); ?></p>
-			<?php do_action( 'register_form' ); ?>
-			<?php wp_nonce_field( __FILE__, 'bbb-nonce' ); ?>
-			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+			<?php do_action( 'bbb_register_form' ); ?>
 			<p class="submit">
 				<?php $this->paypal->print_buy_button(); ?>
 			</p>
+			<input type="hidden" id="bbb-paypal-token" name="bbb-paypal-token" value="<?php echo $this->paypal->token(); ?>">
+			<?php wp_nonce_field( __FILE__, 'bbb-nonce' ); ?>
 		</form>
 	<?php
 	}
@@ -273,7 +281,6 @@ class bbBolt_Server {
 					<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" />
 				</p>
 			<?php do_action('lostpassword_form'); ?>
-				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
 				<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Get New Password'); ?>" tabindex="100" /></p>
 			</form>
 		</div>
@@ -286,7 +293,7 @@ class bbBolt_Server {
 	 */
 	function subscription_details_string( $echo = false ){
 
-		$subscription_details = apply_filters( 'bbb_subscription_string', $this->paypal->get_subscription_string, &$this );
+		$subscription_details = apply_filters( 'bbb_subscription_string', $this->paypal->get_subscription_string(), &$this );
 
 		if( $echo )
 			echo $subscription_details;
@@ -299,19 +306,29 @@ class bbBolt_Server {
 	 * Register a new user with the site. Log them in and redirect them to the support form (with a message notifying them of successful subscription)
 	 */
 	function register_user(){
-		global $bbb_message;
+		global $bbb_message, $wp_query;
 
-		if( ! wp_verify_nonce( $_POST['bbb-nonce'], __FILE__ ) ) 
-			die( 'Nonce Security Check Failed. Please try again or contact the site administrator.' );
+		error_log( 'in register_user $_POST = ' . print_r( $_POST, true ) );
+		error_log( 'in register_user $_GET = ' . print_r( $_GET, true ) );
+
+		// Create the Recurring Payment Profile with PayPal
+		$response = $this->paypal->start_subscription();
+
+		$user_credentials = get_transient( $this->paypal->token() );
+
+		$user_credentials['password'] = $this->decrypt( $user_credentials['password'] );
+
+		delete_transient( $this->paypal->token() );
 
 		// Create User
-		$user_id = wp_create_user( $_POST['bbb-username'], $_POST['bbb-password'], $_POST['bbb-email'] );
+		$user_id = wp_create_user( $user_credentials['username'], $user_credentials['password'], $user_credentials['email'] );
 
 		// Make sure the user was created successfully
 		if( is_wp_error( $user_id ) ) {
 			$bbb_message = $user_id->get_error_message();
 			$this->get_header();
-			$this->register_form( array( 'username' => $_POST['bbb-username'], 'email' => $_POST['bbb-email'] ) );
+			unset( $user_credentials['password'] );
+			$this->register_form( $user_credentials );
 			$this->get_footer();
 			return;
 		}
@@ -320,26 +337,15 @@ class bbBolt_Server {
 		wp_set_current_user( $user_id );
 		wp_set_auth_cookie( $user_id );
 
-		// Create the Recurring Payment Profile with PayPal
-		$response = $this->paypal->start_subscription();
-
-		// Make sure the request with PayPal succeeded
-		if( $response['ACK'] == 'Failure' || $response['ACK'] == 'FailureWithWarning' || ! isset( $response['PROFILEID'] ) ){
-			// Remove the User's Role
-			$user = new WP_User($user_id);
-			$user->set_role('');
-			// Immediately exit and notify of the error.
-			die( 'We were unable to commence your subscription. PayPal error: ' . urldecode( $response['L_LONGMESSAGE0'] ) );
-		}
-
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
 
-		$bbb_message = "Your account have been created. Thanks for signing up.";
+		$bbb_message = "Your account has been created. Thanks for signing up.";
 
 		// Don't run the registration process again
-		unset( $_POST['bbb-registration'] );
-		$this->request_handler();
+		//$wp_query->query_vars['bbbolt'] = 'form';
+		//$this->request_handler();
+		$this->signup_process();
 	}
 
 
@@ -607,6 +613,7 @@ class bbBolt_Server {
 			.message {
 				background-color: lightYellow;
 				border-color: #E6DB55;
+				padding: 0.4em 1em;
 			}
 			/* Registration Progress Tracker */
 			#register-progress {
@@ -614,31 +621,31 @@ class bbBolt_Server {
 			}
 			#register-progress li{
 				display: inline-block;
+				font-size: 11px;
 				position: relative;
-				padding: 3px 10px;
-				border: 1px solid #AAA;
-				color: #767676;
-				-webkit-border-radius:2px;
-				-moz-border-radius:2px;
-				border-radius:2px;
-				margin-right:10px;
+				padding: 0.5em 1em 0.4em;
+				border: 1px solid #CCC;
+				color: #AFAFAF;
+				-webkit-border-radius:0.2em;
+				-moz-border-radius:0.2em;
+				border-radius:0.2em;
+				margin-right:1.2em;
 				text-align: center;
 				width: auto;
-				font-size: 0.8em;
 			}
 			#welcome-step:before, #payment-step:before, 
 			#register-step:before {
 				content: "";
 				position: absolute;
 				border-style: solid;
-				display: block; 
+				display: block;
 				width: 0;
 				top: -1px;
 				bottom: auto;
 				left: auto;
-				right: -11px;
-				border-width: 11px 0 11px 11px;
-				border-color: transparent #AAA;
+				right: -14px;
+				border-width: 14px 0 14px 14px;
+				border-color: transparent #CCC;
 			}
 			#welcome-step:after, #payment-step:after, 
 			#register-step:after {
@@ -650,9 +657,20 @@ class bbBolt_Server {
 				top: 0px;
 				bottom: auto;
 				left: auto;
-				right: -10px;
-				border-width: 10px 0 10px 10px;
+				right: -13px;
+				border-width: 13px 0 13px 13px;
 				border-color: transparent #ECECEC;
+			}
+			#register-progress .current {
+				background-color: lightYellow;
+				border-color: #E6DB55;
+				color: #333;
+			}
+			#register-progress .current:before {
+				border-color: transparent #E6DB55;
+			}
+			#register-progress .current:after {
+				border-color: transparent lightYellow;
 			}
 			/* Support Inbox */
 			.widefat td.no-topics {
@@ -687,13 +705,46 @@ class bbBolt_Server {
 					return false;
 				})
 
-				// Dim the Registration frame when PayPal pops up
+				// When PayPal pops up - dim the Registration frame, change progress meter & store credentials
 				$('#paypal-submit').click(function(){
-					$('#register-container, .bbbolt-title').fadeTo(0,0.2);
+					var valid = validate_form();
+					if( valid.status === false ) {
+						console.log('being called, returning false');
+						$('<div class="message">'+valid.message+'</div>').hide().prependTo('#bbb-registerform').fadeIn('slow');
+						$('#PPDGFrame').remove();
+						return false;
+					}
+					$('#register-progress li').removeClass('current');
+					$('#payment-step').addClass('current');
+					//$('#register-container, .bbbolt-title').fadeTo(0,0.2);
+					$.post(
+						"<?php echo admin_url( 'admin-ajax.php' ); ?>",
+						$('#bbb-registerform').serialize()+'&action=bbb_store_credentials',
+						function(response) {
+							if(response.success == true)
+								console.log('bbb-registerform ajaxed successfully');
+							else
+								console.log('bbb-registerform ajax failed');
+						}
+					);
 				});
 
 				// Attach password strength meter to the registration form
 				$('#bbb-password').strengthy({ minLength: 5, msgs: [ 'Weak', 'Weak', 'OK', 'OK', 'Strong', 'Show password' ] });
+
+				function validate_form(){
+					var msg, status;
+					status = false;
+					if($('#bbb-username').val().length == 0 )
+						msg = 'You must enter a username.';
+					else if($('#bbb-email').val().length == 0 )
+						msg = 'You must enter an email address.';
+					else if($('#bbb-password').val().length == 0 )
+						msg = 'You must enter a password.';
+					else
+						status = true;
+					return { 'status': status, 'message': msg}
+				}
 			});
 		</script>
 		<?php
@@ -842,6 +893,33 @@ class bbBolt_Server {
 		return sanitize_user( $username[0] );
 	}
 
+	/**
+	 * Simple Encryption Function
+	 **/
+	function encrypt( $text ) { 
+		if( !defined( 'BBBOLT_KEY' ) )
+			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
+
+		if( function_exists( 'mcrypt_ecb' ) )
+			$text = trim( base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) ) );
+
+		return $text;
+	} 
+
+	/**
+	 * Simple Decryption Function
+	 **/
+	function decrypt( $text ) {
+		if( !defined( 'BBBOLT_KEY' ) )
+			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
+
+		if( function_exists( 'mcrypt_ecb' ) )
+			$text = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) );
+
+		return  $text;
+	} 
+
+
 }
 endif;
 
@@ -865,5 +943,4 @@ function register_bbbolt_server( $name, $paypal_credentials, $args = array() ){
 	$bbbolt_server = new $bbbolt_server_class( $name, $paypal_credentials, $args );
 }
 endif;
-
 
