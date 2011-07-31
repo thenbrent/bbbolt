@@ -163,10 +163,8 @@ class PayPal_Digital_Goods {
 	 */
 	function get_payment_details_url( $action, $profile_id = '' ){
 
-		error_log('$this->token = ' . $this->token);
 		if( empty( $this->token ) && isset( $_GET['token'] ) )
 			$this->token = $_GET['token'];
-		error_log('* $this->token = ' . $this->token);
 
 		// Setup the Payment Details
 		$api_request = $this->get_api_credentials_url();
@@ -248,6 +246,7 @@ class PayPal_Digital_Goods {
 	 * 
 	 */
 	function request_checkout_token(){
+
 		$response = $this->call_paypal( 'SetExpressCheckout' );
 
 		$this->token = $response['TOKEN'];
@@ -349,8 +348,6 @@ class PayPal_Digital_Goods {
 
 		if( ( 0 == sizeof( $parsed_response ) ) || ! array_key_exists( 'ACK', $parsed_response ) )
 			die("Invalid HTTP Response for POST request($api_parameters) to " . $this->endpoint);
-
-		error_log('$parsed_response = ' . print_r( $parsed_response, true ) );
 
 		if( $parsed_response['ACK'] == 'Failure' )
 			die( "Calling PayPal with action $action has Failed: " . $parsed_response['L_LONGMESSAGE0'] );
