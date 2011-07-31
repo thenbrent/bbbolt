@@ -895,10 +895,18 @@ class bbBolt_Server {
 		if( !defined( 'BBBOLT_KEY' ) )
 			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
 
-		if( function_exists( 'mcrypt_ecb' ) )
-			$text = trim( base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) ) );
+		if( function_exists( 'mcrypt_ecb' ) ) {
+			$encrypted_text = mcrypt_encrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) );
+		} else {
+		  for( $i = 0; $i < strlen( $text ); $i++ ) {
+			$char            = substr( $text, $i, 1 );
+			$keychar         = substr( BBBOLT_KEY, ( $i % strlen( BBBOLT_KEY ) )-1, 1 );
+			$char            = chr( ord( $char ) + ord( $keychar ) );
+			$encrypted_text .= $char;
+		  }
+		}
 
-		return $text;
+		return trim( base64_encode( $encrypted_text ) );
 	} 
 
 	/**
@@ -908,12 +916,21 @@ class bbBolt_Server {
 		if( !defined( 'BBBOLT_KEY' ) )
 			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
 
-		if( function_exists( 'mcrypt_ecb' ) )
-			$text = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, base64_decode( $text ), MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) );
+		$text = base64_decode( $text );
 
-		return  $text;
+		if( function_exists( 'mcrypt_ecb' ) ){
+			$decrypted_text = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) );
+		} else {
+		  for( $i = 0; $i < strlen( $text ); $i++ ) {
+			$char            = substr( $text, $i, 1 );
+			$keychar         = substr( BBBOLT_KEY, ( $i % strlen( BBBOLT_KEY ) ) - 1, 1 );
+			$char            = chr( ord( $char ) - ord( $keychar ) );
+			$decrypted_text .= $char;
+		  }
+		}
+
+		return $decrypted_text;
 	} 
-
 
 }
 endif;
