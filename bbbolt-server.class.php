@@ -117,40 +117,52 @@ class bbBolt_Server {
 	function request_handler(){
 		global $wp_query, $bbb_message;
 
-		error_log('******************************************');
-		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
-
 		// Don't touch non bbbolt queries
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
-		// New user Registration
-		if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) && $_GET['return'] == 'paid' ) {
+		error_log('******************************************');
+		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
+		error_log('$_GET = ' . print_r( $_GET, true ) );
+		error_log('$_POST = ' . print_r( $_POST, true ) );
+		error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
 
-			$this->register_user();
-
-		} elseif( isset( $_POST['bbb_topic_submit'] ) ) {
+		// Routing logic, doesn't work in a switch as nicely as one might think
+		if( isset( $_POST['bbb_topic_submit'] ) ) {
 
 			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
-			$bbb_message = 'Thanks for your submission. We will reply soon.';
+			$bbb_message = __( 'Thanks for your submission. We will reply soon.', 'bbbolt' );
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
 			bbp_new_topic_handler();
 
 		} else {
 
-			// Page View
 			$this->get_header();
 
-			// Get the user to login or signup
-			if( ! is_user_logged_in() ) {
+			// Don't go break this order, it's important (HACK!)
+			if( $wp_query->query_vars['bbbolt'] == 'paypal' ) {
 
-				$this->signup_process();
+				error_log('in request handler with bbbolt == paypal');
+				$this->paypal_return();
+
+			} elseif( $wp_query->query_vars['bbbolt'] == 'payment_cancelled' ) { ?>
+
+				<h3><?php _e( 'Sign-Up Cancelled', 'bbbolt' ); ?></h3>
+				<p><?php _e( 'You have successfully terminated the subscription process.', 'bbbolt' ); ?></p>
+				<p><?php printf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="'.$this->get_url().'">', '</a>' ); ?></p><?php 
+
+			} elseif( ! is_user_logged_in() ) {
+
+				error_log('in request handler, user not logged in');
+				$this->login_signup_process();
 
 			} elseif( $wp_query->query_vars['bbbolt'] == 'inbox' ) {
 
+				error_log('in request handler with bbbolt === inbox');
 				$this->support_inbox();
 
 			} else { // Default to new topic form
+				error_log('in request handler with bbbolt === ?');
 
 				$this->support_form();
 
@@ -166,7 +178,7 @@ class bbBolt_Server {
 	/**
 	 * Takes care of the signup user flow.
 	 */
-	function signup_process(){ 
+	function login_signup_process(){ 
 		global $wp_query, $bbb_message;
 		?>
 		<div id="register-container">
@@ -175,30 +187,11 @@ class bbBolt_Server {
 				<li id="payment-step"<?php if( isset( $_GET['return'] ) ) echo 'class="current"'; ?>>2. Payment</li>
 				<li id="post-step">3. Post a Question</li>
 			</ol>
-		<?php if( $wp_query->query_vars['bbbolt'] == 'paypal' && isset( $_GET['return'] ) ) : // Subscriber returning from PayPal Payment ?>
-
-			<?php // If we're still in the PayPal iframe, remove it and reload the parent page ?>
-			<script>if(parent!=window.top) {parent.location.href = document.location;}</script>
-
-			<?php if( $_GET['return'] == 'paid' ) {
-
-					$this->support_form();
-
-				} elseif( $_GET['return'] == 'cancel' ) { ?>
-
-				<h3><?php printf( __( '%s Sign-Up Cancelled', 'bbbolt' ), $this->labels->name ); ?></h3>
-				<p><?php _e( 'You have successfully terminated the subscription process.', 'bbbolt' ); ?></p>
-				<p><?php printf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="'.$this->bbbolt_url.'">', '</a>' ); ?></p>
-
-			<?php } ?>
-		<?php else : // Output Sign-up blurb ?>
 
 			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
 			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirected to PayPal to authorise this subscription.', 'bbbolt' ) ); ?></p>
 			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->subscription_details_string() ); ?></p>
 			<?php $this->register_form(); ?>
-
-		<?php endif; ?>
 
 			<p id="already-member">
 				<?php _e( 'Already have an account?', 'bbbolt' ); ?>&nbsp;<a id="login-link" href="<?php echo site_url('wp-login.php', 'login') ?>" title="<?php _e( 'Login', 'bbbolt' ) ?>"><?php _e( 'Login here.', 'bbbolt' ) ?></a>
@@ -289,7 +282,7 @@ class bbBolt_Server {
 
 
 	/**
-	 * Apply filters to the PayPal objects subscription string.
+	 * Apply filters to the PayPal object's subscription string.
 	 */
 	function subscription_details_string( $echo = false ){
 
@@ -303,13 +296,22 @@ class bbBolt_Server {
 
 
 	/**
+	 * Output the appropriate template when a user returns from PayPal
+	 */
+	function paypal_return() {
+		// We're still in the PayPal iframe, remove it and reload the parent page to the appropriate URL
+		$url = ( $_GET['return'] == 'paid' ) ? $this->get_url( 'form' ) : $this->get_url( 'payment_cancelled' );
+		error_log('in paypal return, $url = ' . $url );
+		?>
+		<script>if(parent!=window.top) {parent.location.href = "<?php echo $url ?>";}</script>
+		<?php 
+	}
+
+	/**
 	 * Register a new user with the site. Log them in and redirect them to the support form (with a message notifying them of successful subscription)
 	 */
 	function register_user(){
 		global $bbb_message, $wp_query;
-
-		error_log( 'in register_user $_POST = ' . print_r( $_POST, true ) );
-		error_log( 'in register_user $_GET = ' . print_r( $_GET, true ) );
 
 		// Create the Recurring Payment Profile with PayPal
 		$response = $this->paypal->start_subscription();
@@ -320,32 +322,34 @@ class bbBolt_Server {
 
 		delete_transient( $this->paypal->token() );
 
+		error_log('in register_user $user_credentials = ' . print_r( $user_credentials, true ) );
+
 		// Create User
 		$user_id = wp_create_user( $user_credentials['username'], $user_credentials['password'], $user_credentials['email'] );
 
 		// Make sure the user was created successfully
 		if( is_wp_error( $user_id ) ) {
+			error_log('is_wp_error = ' . print_r( $is_wp_error, true ) );
 			$bbb_message = $user_id->get_error_message();
 			$this->get_header();
 			unset( $user_credentials['password'] );
 			$this->register_form( $user_credentials );
 			$this->get_footer();
-			return;
+			exit;
 		}
 
 		// Log the new user in
 		wp_set_current_user( $user_id );
-		wp_set_auth_cookie( $user_id );
+		//header ( "p3p:CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
+		wp_set_auth_cookie( $user_id, true );
+		//$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
 
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
 
-		$bbb_message = "Your account has been created. Thanks for signing up.";
+		$bbb_message = __( 'Thanks for signing up. Your account has been created.', 'bbbolt' );
 
-		// Don't run the registration process again
-		//$wp_query->query_vars['bbbolt'] = 'form';
-		//$this->request_handler();
-		$this->signup_process();
+		return $user_id;
 	}
 
 
@@ -354,7 +358,7 @@ class bbBolt_Server {
 	 */
 	function support_form() { ?>
 		
-		<h3><?php _e( "New Ticket", 'bbbolt' ); ?></h3>
+		<h3><?php _e( 'New Ticket', 'bbbolt' ); ?></h3>
 
 		<?php if( $this->get_messages() ) : ?>
 			<div id="message" class="updated fade"><p><strong><?php echo $this->get_messages(); ?></strong></p></div>
@@ -620,6 +624,7 @@ class bbBolt_Server {
 				margin-left: 0;
 			}
 			#register-progress li{
+				background-color: #ECECEC;
 				display: inline-block;
 				font-size: 12px;
 				position: relative;
@@ -788,14 +793,23 @@ class bbBolt_Server {
 
 
 	/**
-	 * Get the URL for the server
+	 * Get the URL for the server. 
+	 * 
+	 * Takes care of passing messages if set in $bbb_message global.
+	 * 
+	 * @param args string|array If a string, the bbbolt URI parameter is set to the value of the string, if an array, the complete set of args at set as parameters on the array.
 	 */
 	function get_url( $args = array( 'bbbolt' => 'home' ) ){
+
+		if( ! is_array( $args ) )
+			$args = array( 'bbbolt' => $args );
 
 		$url = add_query_arg( $args, $this->site_url );
 
 		if( $this->get_messages() )
 			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
+
+		error_log('in get url, $url = ' . print_r( $url, true ) );
 
 		return apply_filters( 'bbbolt_server_url', $url );
 	}
