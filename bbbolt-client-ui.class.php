@@ -71,22 +71,25 @@ class bbBolt_Client_UI {
 	 **/
 	public function support_form(){
 		global $bbbolt_clients;
+		
+		$header = __( 'Get Support', 'bbbolt' );
 		?>
 		<div id="bbb-support-form">
-			<h2 class="bbbolt-title"><?php _e( 'Get Support', 'bbbolt' ); ?></h2>
 		<?php if ( count( $bbbolt_clients ) > 1 ) : ?>
+			<h2 class="bbbolt-title"><?php echo $header; ?></h2>
 			<?php $iframe_src = 'about:blank'; ?>
 			<p><?php _e( 'Thanks for your call, to help us direct your call, please select the plugin for which you want to make a support request.', 'bbbolt' ); ?></p>
 			<ul class="bbb-client-list">
 			<?php foreach( $bbbolt_clients as $client ) : ?>
-				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url( 'form' ); ?>" target="bbbolt-form-frame"><?php echo $client->get_name(); ?></a></li>
+				<li>&raquo;&nbsp;<a href="<?php echo $client->get_url( 'form' ); ?>" target="bbbolt-slider-frame"><?php echo $client->get_name(); ?></a></li>
 			<?php endforeach; ?>
 			</ul>
 		<?php else : ?>
-		<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
+			<?php $iframe_src = $bbbolt_clients[0]->get_url(); ?>
+			<h2 class="bbbolt-title"><a href="<?php echo $iframe_src; ?>" target="bbbolt-slider-frame"><?php echo $header; ?></a></h2>
 		<?php endif; ?>
 			<img id="bbb-form-loading" src="<?php echo $bbbolt_clients[0]->get_dir_url(); ?>/images/loader.gif">
-			<iframe id="bbbolt-form-frame" name="bbbolt-form-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%" scrolling="no">
+			<iframe id="bbbolt-slider-frame" name="bbbolt-slider-frame" class="bbbolt-frame" src="<?php echo $iframe_src; ?>" width="100%" height="100%" scrolling="no">
 				<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
 			</iframe>
 			<div id="power-bbbolt">Powered by <a href="http://bbbolt.org">Thunder &amp; Lightning</a>.
@@ -180,6 +183,10 @@ class bbBolt_Client_UI {
 			z-index: 999;
 		}
 
+		.bbbolt-title a {
+			text-decoration: none;
+		}
+
 		.bbb-client-list {
 			border-bottom: 1px solid #CCC;
 			padding-bottom: 10px;
@@ -226,8 +233,8 @@ class bbBolt_Client_UI {
 
 			// Loading animation for form iframe
 			$('#bbb-support-form .bbb-client-list a').click(function(){
-				$('#bbbolt-form-frame').addClass('loading');
-				$('#bbbolt-form-frame').attr('src',$(this).attr('href'));
+				$('#bbbolt-slider-frame').addClass('loading');
+				$('#bbbolt-slider-frame').attr('src',$(this).attr('href'));
 				$('#bbb-form-loading').show();
 			});
 
