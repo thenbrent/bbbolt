@@ -58,7 +58,7 @@ class bbBolt_Client_UI {
 				<?php endif; ?>
 				<img id="bbb-inbox-loading" src="<?php echo $bbbolt_clients[0]->get_dir_url(); ?>/images/loader.gif">
 				<iframe id="bbbolt-inbox-frame" name="bbbolt-inbox-frame" class="bbbolt-frame autoHeight" src="<?php echo $iframe_src; ?>" width="100%" scrolling="no">
-					<p><?php _e( "Uh oh, your browser does not support iframes. Please upgrade to a modern browser.", "bbbolt") ?></p>
+					<p><?php printf( __( 'Uh oh, your browser does not support iframes. Please upgrade to a modern browser and %sbrowse happy%s.', 'bbbolt' ), '<a href="http://browsehappy.com/">', '</a>' ); ?></p>
 				</iframe>
 			</div>
 		</div>
