@@ -621,7 +621,7 @@ class bbBolt_Server {
 			}
 			#register-progress li{
 				display: inline-block;
-				font-size: 11px;
+				font-size: 12px;
 				position: relative;
 				padding: 0.5em 1em 0.4em;
 				border: 1px solid #CCC;
@@ -709,7 +709,6 @@ class bbBolt_Server {
 				$('#paypal-submit').click(function(){
 					var valid = validate_form();
 					if( valid.status === false ) {
-						console.log('being called, returning false');
 						$('<div class="message">'+valid.message+'</div>').hide().prependTo('#bbb-registerform').fadeIn('slow');
 						$('#PPDGFrame').remove();
 						return false;
@@ -721,10 +720,6 @@ class bbBolt_Server {
 						"<?php echo admin_url( 'admin-ajax.php' ); ?>",
 						$('#bbb-registerform').serialize()+'&action=bbb_store_credentials',
 						function(response) {
-							if(response.success == true)
-								console.log('bbb-registerform ajaxed successfully');
-							else
-								console.log('bbb-registerform ajax failed');
 						}
 					);
 				});
