@@ -101,8 +101,9 @@ class bbBolt_Server {
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 
 		// Remove X-Frame setting that restricts logins
-		remove_action( 'login_init', 'send_frame_options_header' );
-		remove_action( 'admin_init', 'send_frame_options_header' );
+		if( isset( $_GET['bbbolt'] ) ) {
+			remove_action( 'login_init', 'send_frame_options_header' );
+		}
 	}
 
 
