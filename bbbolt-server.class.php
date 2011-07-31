@@ -41,7 +41,7 @@ class bbBolt_Server {
 			wp_die( __( 'You must give bbBolt your PayPal API username, password and signature. ', 'bbbolt' ) );
 
 		$defaults = array(
-			'site_url' => get_site_url(),
+			'site_url' => site_url(),
 			'labels'   => array( 'name' => get_bloginfo('name'), 'description' => get_bloginfo('name') . __( ' Support Subscription', 'bbbolt' ) ),
 			'paypal'   => array( // Global details for PayPal
 				'sandbox'      => true,
@@ -99,6 +99,10 @@ class bbBolt_Server {
 
 		// We don't want the WordPress Registration interferring with bbBolt
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
+
+		// Remove X-Frame setting that restricts logins
+		remove_action( 'login_init', 'send_frame_options_header' );
+		remove_action( 'admin_init', 'send_frame_options_header' );
 	}
 
 
@@ -117,15 +121,15 @@ class bbBolt_Server {
 	function request_handler(){
 		global $wp_query, $bbb_message;
 
+		error_log('******************************************');
+		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
+		//error_log('$_GET = ' . print_r( $_GET, true ) );
+		//error_log('$_POST = ' . print_r( $_POST, true ) );
+		//error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
+
 		// Don't touch non bbbolt queries
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
-
-		error_log('******************************************');
-		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
-		error_log('$_GET = ' . print_r( $_GET, true ) );
-		error_log('$_POST = ' . print_r( $_POST, true ) );
-		error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
 
 		// Routing logic, doesn't work in a switch as nicely as one might think
 		if( isset( $_POST['bbb_topic_submit'] ) ) {
@@ -265,7 +269,7 @@ class bbBolt_Server {
 			<h3><?php _e( 'Login', 'bbbolt' ); ?></h3>
 			<p><?php printf( __( 'Login to the %s support system.', 'bbbolt' ), $this->labels->name ); ?></p>
 			<?php wp_login_form( array( 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
-			<a id="forgot-link" href="<?php echo $this->bbbolt_url ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
+			<a id="forgot-link" href="<?php echo $this->get_url(); ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
 		</div>
 		<div id="forgot-container" style="display:none;">
 			<form name="lostpasswordform" id="lostpasswordform" action="" method="post">
@@ -624,7 +628,7 @@ class bbBolt_Server {
 				margin-left: 0;
 			}
 			#register-progress li{
-				background-color: #ECECEC;
+				background-color: #F5F5F5;
 				display: inline-block;
 				font-size: 12px;
 				position: relative;
@@ -664,7 +668,7 @@ class bbBolt_Server {
 				left: auto;
 				right: -13px;
 				border-width: 13px 0 13px 13px;
-				border-color: transparent #ECECEC;
+				border-color: transparent #F5F5F5;
 			}
 			#register-progress .current {
 				background-color: lightYellow;
