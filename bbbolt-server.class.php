@@ -100,9 +100,12 @@ class bbBolt_Server {
 		// If bbBolt is installed, site admins must want users to be able to register
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 
-		// For front end registration form
+		// Front-end elements
 		add_shortcode( 'bbbolt_registration_form', array( &$this, 'shortcode_registration_handler' ) );
 		add_shortcode( 'bbbolt_subscription_details', array( &$this, 'shortcode_subscription_details_handler' ) );
+
+		// Maybe enqueue necessary scripts for front end
+		add_action( 'wp_print_styles', array( &$this, 'maybe_print_styles_scripts' ), 1 );
 
 		// Remove X-Frame setting that restricts logins
 		if( isset( $_GET['bbbolt'] ) ) {
@@ -724,7 +727,7 @@ class bbBolt_Server {
 	function get_scripts() { 
 		$ajax_url = admin_url( 'admin-ajax.php' );
 
-		$script = <<<EOT
+		$script = <<<SCRIPT
 <script>
 	jQuery(document).ready(function($){
 		// Show Login Form
@@ -783,7 +786,7 @@ class bbBolt_Server {
 		}
 	});
 </script>
-EOT;
+SCRIPT;
 
 		return apply_filters( 'bbbolt_server_scripts', $script );
 	}
@@ -833,6 +836,20 @@ EOT;
 	}
 
 
+	/**
+	 * Checks if a post contains the registration form shortcode and prints appropriate styles & scripts if it does. 
+	 */
+	function maybe_print_styles_scripts() {
+		global $post;
+
+		if( preg_match( '#\[ *bbbolt_registration_form([^\]])*\]#i', $post->post_content ) ) {
+			$this->print_styles();
+			wp_enqueue_script( 'jquery' );
+			wp_enqueue_script( 'strengthy', $this->get_dir_url() . '/js/jquery.plugins.js', array( 'jquery' ) );
+		}
+	}
+
+
 	/* SHORTCODE FUNCTIONS */
 
 
@@ -842,7 +859,7 @@ EOT;
 			'class' => '',
 		), $attributes ) );
 
-		return "<div id='$id' class='$class'>" . $this->get_registration_form() . "</div>";
+		return "<div id='$id' class='$class'>" . $this->get_registration_form() . $this->get_scripts() . "</div>";
 	}
 
 
