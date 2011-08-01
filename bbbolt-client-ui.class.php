@@ -158,7 +158,7 @@ class bbBolt_Client_UI {
 			background: #ECECEC;
 			border: 1px solid #CCC;
 			height: 100%;
-			padding: 10px;
+			padding: 20px 10px 10px;
 			position: relative;
 			top:0;
 			left:0;
