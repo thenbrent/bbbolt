@@ -719,65 +719,81 @@ class bbBolt_Server {
 
 
 	/**
-	 * Print the scripts used to enhance different parts of the login/registration/form submission process.
+	 * Return the scripts used to enhance different parts of the login/registration/form submission process.
 	 */
-	function print_scripts() { ?>
-		<script>
-			jQuery(document).ready(function($){
-				// Show Login Form
-				$('#login-link').click(function(){
-					$('#login-container').slideDown();
-					$('#register-container').slideUp();
-					return false;
-				});
+	function get_scripts() { 
+		$ajax_url = admin_url( 'admin-ajax.php' );
 
-				// Show forgot password form
-				$('#forgot-link').click(function(){
-					$('#forgot-container').slideDown();
-					$('#login-container').slideUp();
-					return false;
-				})
+		$script = <<<EOT
+<script>
+	jQuery(document).ready(function($){
+		// Show Login Form
+		$('#login-link').click(function(){
+			$('#login-container').slideDown();
+			$('#register-container').slideUp();
+			return false;
+		});
 
-				// When PayPal pops up - dim the Registration frame, change progress meter & store credentials
-				$('#paypal-submit').click(function(){
-					var valid = validate_form();
-					if( valid.status === false ) {
-						$('<div class="message">'+valid.message+'</div>').hide().prependTo('#bbb-registerform').fadeIn('slow');
-						$('#PPDGFrame').remove();
-						return false;
-					}
-					$('#register-progress li').removeClass('current');
-					$('#payment-step').addClass('current');
-					//$('#register-container, .bbbolt-title').fadeTo(0,0.2);
-					$.post(
-						"<?php echo admin_url( 'admin-ajax.php' ); ?>",
-						$('#bbb-registerform').serialize()+'&action=bbb_store_credentials',
-						function(response) {
-						}
-					);
-				});
+		// Show forgot password form
+		$('#forgot-link').click(function(){
+			$('#forgot-container').slideDown();
+			$('#login-container').slideUp();
+			return false;
+		})
 
-				// Attach password strength meter to the registration form
-				$('#bbb-password').strengthy({ minLength: 5, msgs: [ 'Weak', 'Weak', 'OK', 'OK', 'Strong', 'Show password' ] });
-
-				function validate_form(){
-					var msg, status;
-					status = false;
-					if($('#bbb-username').val().length == 0 )
-						msg = 'You must enter a username.';
-					else if($('#bbb-email').val().length == 0 )
-						msg = 'You must enter an email address.';
-					else if($('#bbb-password').val().length == 0 )
-						msg = 'You must enter a password.';
-					else
-						status = true;
-					return { 'status': status, 'message': msg}
+		// When PayPal pops up - dim the Registration frame, change progress meter & store credentials
+		$('#paypal-submit').click(function(){
+			var valid = validate_form();
+			if( valid.status === false ) {
+				if($('.message').length)
+					$('.message').fadeOut('fast', function(){
+						$(this).text(valid.message).fadeIn();
+					});
+				else 
+					$('<div class="message">'+valid.message+'</div>').hide().prependTo('#bbb-registerform').slideDown();
+				$('#PPDGFrame').remove();
+				return false;
+			}
+			$('#register-progress li').removeClass('current');
+			$('#payment-step').addClass('current');
+			//$('#register-container, .bbbolt-title').fadeTo(0,0.2);
+			$.post(
+				"$ajax_url",
+				$('#bbb-registerform').serialize()+'&action=bbb_store_credentials',
+				function(response) {
 				}
-			});
-		</script>
-		<?php
+			);
+		});
+
+		// Attach password strength meter to the registration form
+		$('#bbb-password').strengthy({ minLength: 5, msgs: [ 'Weak', 'Weak', 'OK', 'OK', 'Strong', 'Show password' ] });
+
+		function validate_form(){
+			var msg, status;
+			status = false;
+			if($('#bbb-username').val().length == 0 )
+				msg = 'You must enter a username.';
+			else if($('#bbb-email').val().length == 0 )
+				msg = 'You must enter an email address.';
+			else if($('#bbb-password').val().length == 0 )
+				msg = 'You must enter a password.';
+			else
+				status = true;
+			return { 'status': status, 'message': msg}
+		}
+	});
+</script>
+EOT;
+
+		return apply_filters( 'bbbolt_server_scripts', $script );
 	}
 
+	/**
+	 * Print the javascript used to enhance different parts of the login/registration/form submission process.
+	 */
+	function print_scripts() { 
+		echo $this->get_scripts();
+	}
 
 	/**
 	 * Get all required header elements for the bbBolt iframe and output them
