@@ -124,8 +124,8 @@ class bbBolt_Server {
 
 		error_log('******************************************');
 		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
-		//error_log('$_GET = ' . print_r( $_GET, true ) );
-		//error_log('$_POST = ' . print_r( $_POST, true ) );
+		error_log('$_GET = ' . print_r( $_GET, true ) );
+		error_log('$_POST = ' . print_r( $_POST, true ) );
 		//error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
 
 		// Routing logic, doesn't work in a switch as nicely as one might think
@@ -148,9 +148,12 @@ class bbBolt_Server {
 
 		} else {
 
+			if( $wp_query->query_vars['bbbolt'] == 'register-user' )
+				$this->register_user();
+
 			$this->get_header();
 
-			// Don't go break this order, it's important (HACK!)
+			// Don't go changing this order, it's important
 			if( $wp_query->query_vars['bbbolt'] == 'paypal' ) {
 
 				error_log('in request handler with bbbolt == paypal');
@@ -173,7 +176,7 @@ class bbBolt_Server {
 				$this->support_inbox();
 
 			} else { // Default to new topic form
-				error_log('in request handler with bbbolt === ?');
+				error_log('else, in request handler with bbbolt === ' . $wp_query->query_vars['bbbolt'] );
 
 				$this->support_form();
 
@@ -231,6 +234,49 @@ class bbBolt_Server {
 		exit();
 	}
 
+
+	/**
+	 * Register a new user with the site. Log them in and redirect them to the support form (with a message notifying them of successful subscription)
+	 */
+	function register_user(){
+		global $bbb_message, $wp_query;
+
+		// Create the Recurring Payment Profile with PayPal
+		$response = $this->paypal->start_subscription();
+
+		$user_credentials = get_transient( $this->paypal->token() );
+
+		$user_credentials['password'] = $this->decrypt( $user_credentials['password'] );
+
+		delete_transient( $this->paypal->token() );
+
+		error_log('in register_user $user_credentials = ' . print_r( $user_credentials, true ) );
+
+		// Create User
+		$user_id = wp_create_user( $user_credentials['username'], $user_credentials['password'], $user_credentials['email'] );
+
+		// Make sure the user was created successfully
+		if( is_wp_error( $user_id ) ) {
+			error_log('is_wp_error = ' . print_r( $is_wp_error, true ) );
+			$bbb_message = $user_id->get_error_message();
+			$this->get_header();
+			unset( $user_credentials['password'] );
+			$this->registration_form( $user_credentials );
+			$this->get_footer();
+			exit;
+		}
+
+		// Log the new user in
+		wp_set_current_user( $user_id );
+		$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
+
+		// Store the user's Payment Profile ID 
+		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
+
+		$bbb_message = __( 'Thanks for signing up. Your account has been created.', 'bbbolt' );
+
+		return $user_id;
+	}
 
 
 	/* TEMPLATE FUNCTIONS */
@@ -327,58 +373,12 @@ class bbBolt_Server {
 	 */
 	function paypal_return() {
 		// We're still in the PayPal iframe, remove it and reload the parent page to the appropriate URL
-		$url = ( $_GET['return'] == 'paid' ) ? $this->get_url( 'form' ) : $this->get_url( 'payment_cancelled' );
+		$url = ( $_GET['return'] == 'paid' ) ? $this->get_url( array( 'bbbolt' => 'register-user', 'token' => $_GET['token'] ) ) : $this->get_url( 'payment_cancelled' );
 		error_log('in paypal return, $url = ' . $url );
 		?>
 		<script>if(parent!=window.top) {parent.location.href = "<?php echo $url ?>";}</script>
 		<?php 
 	}
-
-	/**
-	 * Register a new user with the site. Log them in and redirect them to the support form (with a message notifying them of successful subscription)
-	 */
-	function register_user(){
-		global $bbb_message, $wp_query;
-
-		// Create the Recurring Payment Profile with PayPal
-		$response = $this->paypal->start_subscription();
-
-		$user_credentials = get_transient( $this->paypal->token() );
-
-		$user_credentials['password'] = $this->decrypt( $user_credentials['password'] );
-
-		delete_transient( $this->paypal->token() );
-
-		error_log('in register_user $user_credentials = ' . print_r( $user_credentials, true ) );
-
-		// Create User
-		$user_id = wp_create_user( $user_credentials['username'], $user_credentials['password'], $user_credentials['email'] );
-
-		// Make sure the user was created successfully
-		if( is_wp_error( $user_id ) ) {
-			error_log('is_wp_error = ' . print_r( $is_wp_error, true ) );
-			$bbb_message = $user_id->get_error_message();
-			$this->get_header();
-			unset( $user_credentials['password'] );
-			$this->registration_form( $user_credentials );
-			$this->get_footer();
-			exit;
-		}
-
-		// Log the new user in
-		wp_set_current_user( $user_id );
-		//header ( "p3p:CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
-		//wp_set_auth_cookie( $user_id, true );
-		$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
-
-		// Store the user's Payment Profile ID 
-		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
-
-		$bbb_message = __( 'Thanks for signing up. Your account has been created.', 'bbbolt' );
-
-		return $user_id;
-	}
-
 
 	/**
 	 * Display the support form
@@ -876,7 +876,9 @@ EOT;
 		if( $this->get_messages() )
 			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
 
-		return apply_filters( 'bbbolt_server_url', $url );
+		error_log('in get_url = ' . print_r( $url, true ) );
+
+		return apply_filters( 'bbbolt_server_url', $url, $args );
 	}
 
 
