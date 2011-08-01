@@ -97,8 +97,12 @@ class bbBolt_Server {
 		// Save the user's credentials when they redirect to PayPal
 		add_action( 'wp_ajax_nopriv_bbb_store_credentials', array( &$this, 'store_credentials' ) );
 
-		// We don't want the WordPress Registration interferring with bbBolt
+		// If bbBolt is installed, site admins must want users to be able to register
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
+
+		// For front end registration form
+		add_shortcode( 'bbbolt_registration_form', array( &$this, 'shortcode_registration_handler' ) );
+		add_shortcode( 'bbbolt_subscription_details', array( &$this, 'shortcode_subscription_details_handler' ) );
 
 		// Remove X-Frame setting that restricts logins
 		if( isset( $_GET['bbbolt'] ) ) {
@@ -197,8 +201,8 @@ class bbBolt_Server {
 
 			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
 			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirected to PayPal to authorise this subscription.', 'bbbolt' ) ); ?></p>
-			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->subscription_details_string() ); ?></p>
-			<?php $this->register_form(); ?>
+			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->get_subscription_details() ); ?></p>
+			<?php $this->registration_form(); ?>
 
 			<p id="already-member">
 				<?php _e( 'Already have an account?', 'bbbolt' ); ?>&nbsp;<a id="login-link" href="<?php echo site_url('wp-login.php', 'login') ?>" title="<?php _e( 'Login', 'bbbolt' ) ?>"><?php _e( 'Login here.', 'bbbolt' ) ?></a>
@@ -233,33 +237,43 @@ class bbBolt_Server {
 
 
 	/**
-	 * Outputs the HTML registration form for the plugin's support page.
-	 *
-	 * Calls the same hooks as the vanilla WordPress registration form to be compatible with 
-	 * other plugins. 
+	 * Builds the HTML registration form for the plugin's support page.
 	 **/
-	function register_form( $credentials = array() ) { ?>
-		<form name="bbb-registerform" id="bbb-registerform" action="" method="post">
-			<p>
-				<label><?php _e( 'Username', 'bbbolt' ) ?></label>
-				<input type="text" name="bbb-username" id="bbb-username" class="input" value="<?php if( isset( $credentials['username'] ) ) echo esc_attr( stripslashes( $credentials['username'] ) ); ?>" size="25" tabindex="10" />
-			</p>
-			<p>
-				<label><?php _e( 'E-mail', 'bbbolt' ) ?></label>
-				<input type="text" name="bbb-email" id="bbb-email" class="input" value="<?php if( isset( $credentials['email'] ) ) echo esc_attr( stripslashes( $credentials['email'] ) ); ?>" size="25" tabindex="20" />
-			</p>
-			<p>
-				<label><?php _e( 'Password', 'bbbolt' ) ?></label>
-				<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" />
-			</p>
-			<?php do_action( 'bbb_register_form' ); ?>
-			<p class="submit">
-				<?php $this->paypal->print_buy_button(); ?>
-			</p>
-			<input type="hidden" id="bbb-paypal-token" name="bbb-paypal-token" value="<?php echo $this->paypal->token(); ?>">
-			<?php wp_nonce_field( __FILE__, 'bbb-nonce' ); ?>
-		</form>
-	<?php
+	function get_registration_form( $credentials = array() ) {
+
+		if( is_user_logged_in() )
+			return sprintf( __( '%sYou are already registered and logged in.%s', 'bbbolt' ), '<p>', '</p>' );
+
+		$credentials['username'] = ( isset( $credentials['username'] ) ) ? esc_attr( stripslashes( $credentials['username'] ) ) : '';
+		$credentials['email']    = ( isset( $credentials['email'] ) ) ? esc_attr( stripslashes( $credentials['email'] ) ) : '';
+
+		$form  = '<form name="bbb-registerform" id="bbb-registerform" action="" method="post">';
+
+		$form .= '<p><label>' . __( 'Username', 'bbbolt' ) . '</label>';
+		$form .= '<input type="text" name="bbb-username" id="bbb-username" class="input" size="25" tabindex="10" value="' . $credentials['username'] . '" /></p>';
+
+		$form .= '<p><label>' . __( 'E-mail', 'bbbolt' ) . '</label>';
+		$form .= '<input type="text" name="bbb-email" id="bbb-email" class="input" size="25" tabindex="20" value="' . $credentials['email'] . '"/></p>';
+
+		$form .= '<p><label>' . __( 'Password', 'bbbolt' ) . '</label>';
+		$form .= '<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" /></p>';
+
+		$form .= '<p class="submit">' . $this->paypal->get_buy_button() . '</p>';
+		$form .= $this->paypal->get_script();
+		$form .= '<input type="hidden" id="bbb-paypal-token" name="bbb-paypal-token" value="' . $this->paypal->token() . '">';
+
+		$form .= wp_nonce_field( __FILE__, 'bbb-nonce', true, false );
+		$form .= '</form>';
+
+		return apply_filters( 'bbbolt-registration-form', $form, $credentials );
+	}
+
+
+	/**
+	 * Outputs the HTML registration form for the plugin's support page @uses get_registration_form().
+	 **/
+	function registration_form( $credentials = array() ){
+		echo $this->get_registration_form( $credentials );
 	}
 
 
@@ -288,16 +302,23 @@ class bbBolt_Server {
 
 
 	/**
-	 * Apply filters to the PayPal object's subscription string.
+	 * Returns a string describing the subscription. eg. $20 per month for 3 years. 
+	 * 
+	 * Applies filters to the PayPal object's subscription string.
 	 */
-	function subscription_details_string( $echo = false ){
+	function get_subscription_details(){
 
-		$subscription_details = apply_filters( 'bbb_subscription_string', $this->paypal->get_subscription_string(), &$this );
-
-		if( $echo )
-			echo $subscription_details;
+		$subscription_details = apply_filters( 'bbbolt_subscription_details', $this->paypal->get_subscription_string(), &$this );
 
 		return $subscription_details;
+	}
+
+	/**
+	 * Prints the a string describing the subscription as created by @see get_subscription_details().
+	 */
+	function subscription_details(){
+
+		echo $this->get_subscription_details();
 	}
 
 
@@ -339,7 +360,7 @@ class bbBolt_Server {
 			$bbb_message = $user_id->get_error_message();
 			$this->get_header();
 			unset( $user_credentials['password'] );
-			$this->register_form( $user_credentials );
+			$this->registration_form( $user_credentials );
 			$this->get_footer();
 			exit;
 		}
@@ -487,19 +508,19 @@ class bbBolt_Server {
 				<table class="widefat">
 					<thead>
 						<tr>
-							<th id="bbb_freshness"><?php _e( 'Subject', 'bbbolt' ); ?></th>
-							<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
-							<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
+							<th id="bbb_subject"><?php _e( 'Subject', 'bbbolt' ); ?></th>
+							<th id="bbb_message"><?php _e( 'Message', 'bbbolt' ); ?></th>
+							<th id="bbb_author"><?php _e( 'Author', 'bbbolt' ); ?></th>
 							<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
-							<th id="bbb_freshness"><?php _e( 'Reply', 'bbbolt' ); ?></th>
+							<th id="bbb_reply"><?php _e( 'Reply', 'bbbolt' ); ?></th>
 						</tr>
 					</thead>
 					<tfoot>
-						<th id="bbb_freshness"><?php _e( 'Subject', 'bbbolt' ); ?></th>
-						<th id="bbb_freshness"><?php _e( 'Message', 'bbbolt' ); ?></th>
-						<th id="bbb_freshness"><?php _e( 'Author', 'bbbolt' ); ?></th>
-						<th id="bbb_freshness"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
-						<th id="bbb_freshness"><?php _e( 'Reply', 'bbbolt' ); ?></th>
+						<th id="bbb_subject_foot"><?php _e( 'Subject', 'bbbolt' ); ?></th>
+						<th id="bbb_message_foot"><?php _e( 'Message', 'bbbolt' ); ?></th>
+						<th id="bbb_author_foot"><?php _e( 'Author', 'bbbolt' ); ?></th>
+						<th id="bbb_freshness_foot"><?php _e( 'Freshness', 'bbbolt' ); ?></th>
+						<th id="bbb_reply_foot"><?php _e( 'Reply', 'bbbolt' ); ?></th>
 					</tfoot>
 					<tbody>
 					<?php
@@ -793,6 +814,29 @@ class bbBolt_Server {
 		</body>
 		</html>
 		<?php
+	}
+
+
+	/* SHORTCODE FUNCTIONS */
+
+
+	function shortcode_registration_handler( $attributes ) {
+		extract( shortcode_atts( array(
+			'id' => 'bbbolt-registration-form',
+			'class' => '',
+		), $attributes ) );
+
+		return "<div id='$id' class='$class'>" . $this->get_registration_form() . "</div>";
+	}
+
+
+	function shortcode_subscription_details_handler( $attributes ) {
+		extract( shortcode_atts( array(
+			'id' => 'bbbolt-subscription-detail',
+			'class' => '',
+		), $attributes ) );
+
+		return "<div id='$id' class='$class'>" . $this->get_subscription_details() . "</div>";
 	}
 
 
