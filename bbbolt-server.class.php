@@ -219,8 +219,9 @@ class bbBolt_Server {
 		<?php
 	}
 
+
 	/**
-	 * 
+	 * Temporarily store a user's details while they make payment.
 	 */
 	function store_credentials(){
 
@@ -362,6 +363,7 @@ class bbBolt_Server {
 		return $subscription_details;
 	}
 
+
 	/**
 	 * Prints the a string describing the subscription as created by @see get_subscription_details().
 	 */
@@ -382,6 +384,7 @@ class bbBolt_Server {
 		<script>if(parent!=window.top) {parent.location.href = "<?php echo $url ?>";}</script>
 		<?php 
 	}
+
 
 	/**
 	 * Display the support form
@@ -791,12 +794,14 @@ SCRIPT;
 		return apply_filters( 'bbbolt_server_scripts', $script );
 	}
 
+
 	/**
 	 * Print the javascript used to enhance different parts of the login/registration/form submission process.
 	 */
 	function print_scripts() { 
 		echo $this->get_scripts();
 	}
+
 
 	/**
 	 * Get all required header elements for the bbBolt iframe and output them
