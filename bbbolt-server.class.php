@@ -103,16 +103,8 @@ class bbBolt_Server {
 		// Remove X-Frame setting that restricts logins
 		if( isset( $_GET['bbbolt'] ) ) {
 			remove_action( 'login_init', 'send_frame_options_header' );
+			remove_action( 'admin_init', 'send_frame_options_header' );
 		}
-	}
-
-
-	/**
-	 * Overrides the value of the 'users_can_register' site option to always 
-	 * return false. This returns false on single & multisite installs due to the hooks priority. 
-	 */
-	function users_can_register_override() {
-		return false;
 	}
 
 
@@ -122,23 +114,33 @@ class bbBolt_Server {
 	function request_handler(){
 		global $wp_query, $bbb_message;
 
+		// Don't touch non bbbolt queries
+		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
+			return;
+
 		error_log('******************************************');
 		error_log('$wp_query bbbolt = ' . print_r( $wp_query->query_vars['bbbolt'], true ) );
 		//error_log('$_GET = ' . print_r( $_GET, true ) );
 		//error_log('$_POST = ' . print_r( $_POST, true ) );
 		//error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
 
-		// Don't touch non bbbolt queries
-		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
-			return;
-
 		// Routing logic, doesn't work in a switch as nicely as one might think
 		if( isset( $_POST['bbb_topic_submit'] ) ) {
+
+			error_log('in request handler, bbb_topic_submit is set');
 
 			// No Simple save function for bbPress, bbp_new_topic_handler does the save but also does a redirect, so we need to force it to redirect back to us.
 			$bbb_message = __( 'Thanks for your submission. We will reply soon.', 'bbbolt' );
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
 			bbp_new_topic_handler();
+
+			// If the bbp_new_topic_handler() function didn't do a redirect and exit() there was an error so reprint the support from with the error
+			unset( $GLOBALS['bbb_message'] );
+
+			$this->get_header();
+			$this->support_form();
+			$this->get_footer();
+			exit();
 
 		} else {
 
@@ -215,8 +217,7 @@ class bbBolt_Server {
 		if( ! wp_verify_nonce( $_POST['bbb-nonce'], __FILE__ ) ) 
 			die( 'Nonce Security Check Failed. Please try again or contact the site administrator.' );
 
-		if( function_exists( 'mcrypt_ecb' ) )
-			$_POST['bbb-password'] = $this->encrypt( $_POST['bbb-password'] );
+		$_POST['bbb-password'] = $this->encrypt( $_POST['bbb-password'] );
 
 		// Store User's Credentials for an Hour
 		set_transient( $_POST['bbb-paypal-token'], array( 'username' => $_POST['bbb-username'], 'password' => $_POST['bbb-password'], 'email' => $_POST['bbb-email'] ), 3600 );
@@ -346,8 +347,8 @@ class bbBolt_Server {
 		// Log the new user in
 		wp_set_current_user( $user_id );
 		//header ( "p3p:CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
-		wp_set_auth_cookie( $user_id, true );
-		//$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
+		//wp_set_auth_cookie( $user_id, true );
+		$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
 
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
@@ -362,11 +363,11 @@ class bbBolt_Server {
 	 * Display the support form
 	 */
 	function support_form() { ?>
-		
+
 		<h3><?php _e( 'New Ticket', 'bbbolt' ); ?></h3>
 
 		<?php if( $this->get_messages() ) : ?>
-			<div id="message" class="updated fade"><p><strong><?php echo $this->get_messages(); ?></strong></p></div>
+			<div id="message" class="updated fade"><p><?php echo $this->get_messages(); ?></p></div>
 		<?php endif; ?>
 
 		<?php if ( ( bbp_is_topic_edit() && current_user_can( 'edit_topic', bbp_get_topic_id() ) ) || current_user_can( 'publish_topics' ) || ( bbp_allow_anonymous() && !is_user_logged_in() ) ) : ?>
@@ -380,7 +381,7 @@ class bbBolt_Server {
 							<?php do_action( 'bbp_template_notices' ); ?>
 
 							<div>
-								<?php if ( ! bbp_is_forum() && bbp_get_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ) != 'No forums available' ) : ?>
+								<?php if ( !bbp_is_forum() ) : ?>
 									<p>
 										<label for="bbp_forum_id"><?php _e( 'Forum:', 'bbbolt' ); ?></label><br />
 										<?php bbp_dropdown( array( 'selected' => bbp_get_form_topic_forum() ) ); ?>
@@ -549,6 +550,7 @@ class bbBolt_Server {
 		global $bbb_message;
 
 		$message = '';
+
 		if( isset( $bbb_message ) )
 			$message .= $bbb_message . '<br/>';
 
@@ -814,8 +816,6 @@ class bbBolt_Server {
 		if( $this->get_messages() )
 			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
 
-		error_log('in get url, $url = ' . print_r( $url, true ) );
-
 		return apply_filters( 'bbbolt_server_url', $url );
 	}
 
@@ -950,6 +950,15 @@ class bbBolt_Server {
 
 		return $decrypted_text;
 	} 
+
+
+	/**
+	 * Overrides the value of the 'users_can_register' site option to always 
+	 * return false. This returns false on both single & multisite installs due to the hooks priority. 
+	 */
+	function users_can_register_override() {
+		return false;
+	}
 
 }
 endif;
