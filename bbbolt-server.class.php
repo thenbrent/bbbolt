@@ -37,6 +37,8 @@ class bbBolt_Server {
 	 **/
 	function __construct( $name, $paypal_credentials, $args = array() ){
 
+		error_log( '*********************************************' );
+
 		if( empty(  $paypal_credentials['username'] ) || empty(  $paypal_credentials['password'] ) || empty(  $paypal_credentials['signature'] ) )
 			wp_die( __( 'You must give bbBolt your PayPal API username, password and signature. ', 'bbbolt' ) );
 
@@ -131,6 +133,9 @@ class bbBolt_Server {
 		error_log('$_POST = ' . print_r( $_POST, true ) );
 		//error_log('$_COOKIE = ' . print_r( $_COOKIE, true ) );
 
+		if( $wp_query->query_vars['bbbolt'] == 'register-user' )
+			$this->register_user();
+
 		// Routing logic, doesn't work in a switch as nicely as one might think
 		if( isset( $_POST['bbb_topic_submit'] ) ) {
 
@@ -141,7 +146,7 @@ class bbBolt_Server {
 			add_filter( 'bbp_new_topic_redirect_to', array( &$this, 'get_url' ) );
 			bbp_new_topic_handler();
 
-			// If the bbp_new_topic_handler() function didn't do a redirect and exit() there was an error so reprint the support from with the error
+			// If the bbp_new_topic_handler() function didn't do a redirect and exit() there was an error so print the support form with the error message
 			unset( $GLOBALS['bbb_message'] );
 
 			$this->get_header();
@@ -149,24 +154,34 @@ class bbBolt_Server {
 			$this->get_footer();
 			exit();
 
-		} else {
+		} elseif( $wp_query->query_vars['bbbolt'] == 'paypal' ) {
 
-			if( $wp_query->query_vars['bbbolt'] == 'register-user' )
-				$this->register_user();
+			error_log('in request handler with bbbolt == paypal');
+			$this->paypal_return();
+			exit();
+
+		} elseif( $wp_query->query_vars['bbbolt'] == 'checkout' ) {
+
+			error_log( 'in request handler with bbbolt == checkout' );
+
+			// Redirect the current user back to the same page they registered on
+			if( isset( $_GET['redirect_to'] ) ) {
+				$redirect_to = array( 'redirect_to' => urlencode( $_GET['redirect_to'] ) );
+				$this->paypal->cancel_url = add_query_arg( $redirect_to, $this->paypal->cancel_url );
+				$this->paypal->return_url = add_query_arg( $redirect_to, $this->paypal->return_url );
+			}
+
+			header( 'Location: ' . $this->paypal->get_checkout_url() );
+			exit();
+
+		} elseif( ! $this->contains_shortcode() ) { // We're in the bbBolt Slider
 
 			$this->get_header();
 
 			// Don't go changing this order, it's important
-			if( $wp_query->query_vars['bbbolt'] == 'paypal' ) {
+			if( $wp_query->query_vars['bbbolt'] == 'payment_cancelled' ) { 
 
-				error_log('in request handler with bbbolt == paypal');
-				$this->paypal_return();
-
-			} elseif( $wp_query->query_vars['bbbolt'] == 'payment_cancelled' ) { ?>
-
-				<h3><?php _e( 'Sign-Up Cancelled', 'bbbolt' ); ?></h3>
-				<p><?php _e( 'You have successfully terminated the subscription process.', 'bbbolt' ); ?></p>
-				<p><?php printf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="'.$this->get_url().'">', '</a>' ); ?></p><?php 
+				echo $this->payment_cancelled();
 
 			} elseif( ! is_user_logged_in() ) {
 
@@ -179,16 +194,16 @@ class bbBolt_Server {
 				$this->support_inbox();
 
 			} else { // Default to new topic form
-				error_log('else, in request handler with bbbolt === ' . $wp_query->query_vars['bbbolt'] );
 
+				error_log('else, in request handler with bbbolt === ' . $wp_query->query_vars['bbbolt'] );
 				$this->support_form();
 
 			}
 
 			$this->get_footer();
 
+			exit();
 		}
-		exit();
 	}
 
 
@@ -283,6 +298,22 @@ class bbBolt_Server {
 	}
 
 
+	/**
+	 * 
+	 */
+	function payment_cancelled( $redirect_to = '' ){
+
+		if( empty( $redirect_to ) )
+		 	$redirect_to = $this->get_url();
+
+		$cancelled = '<h3>' . __( 'Sign-Up Cancelled', 'bbbolt' ) . '</h3>'
+				   . '<p>' . __( 'You have successfully terminated the subscription process.', 'bbbolt' ) . '</p>'
+				   . '<p>' . sprintf( __( 'You can attempt to sign-up again %shere%s.', 'bbbolt' ), '<a href="' . $redirect_to . '">', '</a>' ) . '</p>';
+
+		return apply_filters( 'bbbolt_payment_cancelled', $cancelled );
+	}
+
+
 	/* TEMPLATE FUNCTIONS */
 
 
@@ -292,7 +323,7 @@ class bbBolt_Server {
 	function get_registration_form( $credentials = array() ) {
 
 		if( is_user_logged_in() )
-			return sprintf( __( '%sYou are already registered and logged in.%s', 'bbbolt' ), '<p>', '</p>' );
+			return sprintf( __( '%sYou are already registered and logged in.%s', 'bbbolt' ), '<p class="message">', '</p>' );
 
 		$credentials['username'] = ( isset( $credentials['username'] ) ) ? esc_attr( stripslashes( $credentials['username'] ) ) : '';
 		$credentials['email']    = ( isset( $credentials['email'] ) ) ? esc_attr( stripslashes( $credentials['email'] ) ) : '';
@@ -308,7 +339,7 @@ class bbBolt_Server {
 		$form .= '<p><label>' . __( 'Password', 'bbbolt' ) . '</label>';
 		$form .= '<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" /></p>';
 
-		$form .= '<p class="submit">' . $this->paypal->get_buy_button() . '</p>';
+		$form .= '<p class="submit">' . $this->paypal->get_buy_button( array( 'href' => $this->get_url( 'checkout' ), 'get_token' => false ) ) . '</p>';
 		$form .= $this->paypal->get_script();
 		$form .= '<input type="hidden" id="bbb-paypal-token" name="bbb-paypal-token" value="' . $this->paypal->token() . '">';
 
@@ -374,15 +405,33 @@ class bbBolt_Server {
 
 
 	/**
-	 * Output the appropriate template when a user returns from PayPal
+	 * Close the PayPal iframe and redirec to the appropriate template when a user returns from PayPal
 	 */
 	function paypal_return() {
-		// We're still in the PayPal iframe, remove it and reload the parent page to the appropriate URL
-		$url = ( $_GET['return'] == 'paid' ) ? $this->get_url( array( 'bbbolt' => 'register-user', 'token' => $_GET['token'] ) ) : $this->get_url( 'payment_cancelled' );
+
+		$paid_params      = array( 'bbbolt' => 'register-user', 'token' => $_GET['token'] );
+		$cancelled_params = array( 'bbbolt' => 'payment_cancelled' );
+
+		if( isset( $_GET['redirect_to'] ) ) {
+			$redirect_to = urldecode( $_GET['redirect_to'] );
+			$url = ( $_GET['return'] == 'paid' ) ? add_query_arg( $paid_params, $redirect_to ) : add_query_arg( $cancelled_params, $redirect_to );
+		} else {
+			$url = ( $_GET['return'] == 'paid' ) ? $this->get_url( $paid_params ) : $this->get_url( $cancelled_params );
+		}
 		error_log('in paypal return, $url = ' . $url );
-		?>
-		<script>if(parent!=window.top) {parent.location.href = "<?php echo $url ?>";}</script>
-		<?php 
+		?><!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php bloginfo( 'charset' ); ?>" />
+			<title><?php bloginfo( 'name' ); ?></title>
+			<?php // Short circuit logic to account for when script is loaded in bbBolt iframe & from front-end ?>
+			<script>if(parent!=window.top||self!=top){parent.location.href = "<?php echo $url ?>";}</script>
+		</head>
+		<body>
+			<img id="bbb-form-loading" src="<?php echo $this->get_dir_url(); ?>/images/loader.gif">
+		</body>
+		</html>
+		<?php
 	}
 
 
@@ -650,7 +699,7 @@ class bbBolt_Server {
 			}
 			.message {
 				background-color: lightYellow;
-				border-color: #E6DB55;
+				border: 1px solid #E6DB55;
 				padding: 0.4em 1em;
 			}
 			/* Registration Progress Tracker */
@@ -728,7 +777,8 @@ class bbBolt_Server {
 	 * Return the scripts used to enhance different parts of the login/registration/form submission process.
 	 */
 	function get_scripts() { 
-		$ajax_url = admin_url( 'admin-ajax.php' );
+		$ajax_url        = admin_url( 'admin-ajax.php' );
+		$loading_gif_url = $this->get_dir_url() . '/images/loader.gif';
 
 		$script = <<<SCRIPT
 <script>
@@ -767,6 +817,19 @@ class bbBolt_Server {
 				"$ajax_url",
 				$('#bbb-registerform').serialize()+'&action=bbb_store_credentials',
 				function(response) {
+					$('#bbb-registerform .submit').html('<img class="loading" src="$loading_gif_url" />'); 
+					var tid = setTimeout(hideLoader, 5000);
+					function hideLoader() {
+						if( dg.isOpen() ) {
+							$('#bbb-registerform .submit').fadeOut();
+							abortTimer();
+						} else {
+							tid = setTimeout(hideLoader, 5000);
+						}
+					}
+					function abortTimer() { // to be called when you want to stop the timer
+					  clearTimeout(tid);
+					}
 				}
 			);
 		});
@@ -845,9 +908,7 @@ SCRIPT;
 	 * Checks if a post contains the registration form shortcode and prints appropriate styles & scripts if it does. 
 	 */
 	function maybe_print_styles_scripts() {
-		global $post;
-
-		if( preg_match( '#\[ *bbbolt_registration_form([^\]])*\]#i', $post->post_content ) ) {
+		if( $this->contains_shortcode() ) {
 			$this->print_styles();
 			wp_enqueue_script( 'jquery' );
 			wp_enqueue_script( 'strengthy', $this->get_dir_url() . '/js/jquery.plugins.js', array( 'jquery' ) );
@@ -858,13 +919,26 @@ SCRIPT;
 	/* SHORTCODE FUNCTIONS */
 
 
-	function shortcode_registration_handler( $attributes ) {
+	function shortcode_registration_handler( $attributes, $content = '' ) {
+		global $wp_query; 
+
 		extract( shortcode_atts( array(
 			'id' => 'bbbolt-registration-form',
 			'class' => '',
 		), $attributes ) );
 
-		return "<div id='$id' class='$class'>" . $this->get_registration_form() . $this->get_scripts() . "</div>";
+		$display = "<div id='$id' class='$class'>";
+
+		if( is_user_logged_in() )
+			$display .= '<p class="message">' . __( 'You are already registered and logged in.', 'bbbolt' ) . '</p>';
+		elseif( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'payment_cancelled' )
+			$display .= $this->payment_cancelled( get_permalink() );
+		else 
+			$display .= do_shortcode( $content ) . $this->get_registration_form() . $this->get_scripts();
+
+		$display .= '</div>';
+
+		return $display;
 	}
 
 
@@ -882,6 +956,18 @@ SCRIPT;
 
 
 	/**
+	 * Check if current page includes the bbBolt registration Shortcode
+	 */
+	function contains_shortcode(){
+		global $post;
+
+		if( is_object( $post ) && preg_match( '#\[ *bbbolt_registration_form([^\]])*\]#i', $post->post_content ) )
+			return true;
+		else
+			return false;
+	}
+
+	/**
 	 * Get the URL for the server. 
 	 * 
 	 * Takes care of passing messages if set in $bbb_message global.
@@ -896,9 +982,11 @@ SCRIPT;
 		$url = add_query_arg( $args, $this->site_url );
 
 		if( $this->get_messages() )
-			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ) );
+			$url = add_query_arg( array( 'bbb-msg' => urlencode( $this->get_messages() ) ), $url );
 
-		error_log('in get_url = ' . print_r( $url, true ) );
+		// Add front-end flags to redirect the current user back to the same page they registered on
+		if( $args['bbbolt'] == 'checkout' && get_permalink() != false )
+			$url = add_query_arg( array( 'redirect_to' => urlencode( get_permalink() ) ), $url );
 
 		return apply_filters( 'bbbolt_server_url', $url, $args );
 	}
