@@ -48,12 +48,12 @@ class PayPal_Digital_Goods {
 	/**
 	 * The URL on your site that the purchaser is sent to upon completing checkout.
 	 */
-	private $return_url;
+	public $return_url;
 
 	/**
 	 * The URL on your site that the purchaser is sent to when cancelling a payment during the checkout process.
 	 */
-	private $cancel_url;
+	public $cancel_url;
 
 	/**
 	 * Creates a PayPal Digital Goods Object configured according to the parameters in the args associative array. 
@@ -336,6 +336,8 @@ class PayPal_Digital_Goods {
 		if( ! $response )
 			die($action . ' failed: ' . curl_error( $ch ) . '(' . curl_errno( $ch ) . ')');
 
+		curl_close($ch);
+
 		// An associative array is more usable than a parameter string
 		$response        = explode( '&', $response );
 		$parsed_response = array();
@@ -375,16 +377,17 @@ class PayPal_Digital_Goods {
 	 * If you do print this script manually, print it after the button in the DOM to ensure the 
 	 * click event is properly hooked.
 	 */
-	function get_script( $element_id = '' ){
+	function get_script( $args = array() ){
 		
-		if( empty( $element_id ) )
-			$element_id = 'paypal-submit';
+		if( empty( $args['element_id'] ) )
+			$args['element_id'] = 'paypal-submit';
 
 		$dg_script  = '<script src ="https://www.paypalobjects.com/js/external/dg.js" type="text/javascript"></script>'
 					. '<script>'
 					. 'var dg = new PAYPAL.apps.DGFlow({'
-					. 'trigger: "' . $element_id . '"' // the ID of the HTML element which calls setExpressCheckout
+					. 'trigger: "' . $args['element_id'] . '"' // the ID of the HTML element which calls setExpressCheckout
 					. '}); </script>';
+
 		return $dg_script;
 	}
 
@@ -392,14 +395,43 @@ class PayPal_Digital_Goods {
 	/**
 	 * Create and return the Buy (or Subscribe) button for your page. 
 	 * 
-	 * PayPal requires a token for checkout, so this function takes care of requesting the token. 
+	 * The button can be output either as a link to a image submit button, link to a page
+	 * or link directly to PayPal (default). 
+	 * 
+	 * The simplest method is to pass no parameters and have the button be a link directly to
+	 * PayPal; however, the drawback of this approach is a slower load time for the page on which 
+	 * the button is included.
+	 * 
+	 * @param args array. Name => value parameters to customise the buy button. 
+	 * 			'id' string. The id of the submit element. Defaults to 'paypal-submit'. 
+	 * 			'element' string. The type of element to use as the button. Either anchor or submit. Default 'anchor'.
+	 * 			'href' string. The URL for 'anchor' tag. Ignored when 'element' is 'submit'. Default $this->checkout_url. 
+	 * 			'get_token' boolean. Whether to include a token with the href. Overridden by 'element' when it is 'submit'.
 	 */
-	function get_buy_button(){
-		if( empty( $this->token ) ) {
-			$this->request_checkout_token();
+	function get_buy_button( $args = array() ){
+
+		$defaults = array(  'id'        => 'paypal-submit',
+							'element'   => 'anchor',
+							'href'      => $this->checkout_url,
+							'get_token' => true
+					);
+
+		$args = array_merge( $defaults, $args );
+
+		if( $args['element'] == 'anchor' ) {
+			if( $args['get_token'] == true && empty( $this->token ) )
+				$this->request_checkout_token();
+
+			// Include the token in the href if the default href is not overridden
+			if( $args['href'] == $this->checkout_url )
+				$args['href'] .= $this->token;
+
+			$button = '<a href="' . $args['href'] . '" id="' . $args['id'] . '"><img src="https://www.paypal.com/en_US/i/btn/btn_dg_pay_w_paypal.gif" border="0" /></a>';
+		} else {
+			$button = '<input type="image" id="' . $args['id'] . '" src="https://www.paypal.com/en_US/i/btn/btn_dg_pay_w_paypal.gif">';
 		}
 
-		return '<a href="' . $this->checkout_url . $this->token . '" id="paypal-submit"><img src="https://www.paypal.com/en_US/i/btn/btn_dg_pay_w_paypal.gif" border="0" /></a>';
+		return $button;
 	}
 
 
@@ -408,16 +440,27 @@ class PayPal_Digital_Goods {
 	 * required by the button.
 	 * 
 	 * If you want to manually insert the script at a different position in your page,
-	 * @see get_buy_button().
+	 * you can manually call @see get_buy_button() & @see get_script().
 	 * 
 	 * @uses get_buy_button()
 	 * @uses get_script()
 	 */
-	function print_buy_button(){
-		echo $this->get_buy_button();
-		echo $this->get_script();
+	function print_buy_button( $args = array() ){
+		echo $this->get_buy_button( $args );
+		echo $this->get_script( $args );
 	}
 
+
+	/**
+	 * Returns the Checkout URL including a token for this transaction. 
+	 */
+	function get_checkout_url() {
+		if( empty( $this->token ) )
+			$this->request_checkout_token();
+
+		// Include the token in the href if the default href is not overridden
+		return $this->checkout_url . $this->token;
+	}
 
 	/**
 	 * Get the description for this subscription
