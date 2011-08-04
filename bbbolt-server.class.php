@@ -257,7 +257,7 @@ class bbBolt_Server {
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
 
-		$bbb_message = __( 'Thanks for signing up. Your account has been created.', 'bbbolt' );
+		$bbb_message = sprintf( __( 'Thanks for signing up %s. Your account has been created.', 'bbbolt' ), $user_credentials['username'] );
 
 		return $user_id;
 	}
@@ -379,7 +379,7 @@ class bbBolt_Server {
 	function paypal_return() {
 
 		$paid_params      = array( 'bbbolt' => 'register-user', 'token' => $_GET['token'] );
-		$cancelled_params = array( 'bbbolt' => 'payment_cancelled' );
+		$cancelled_params = array( 'bbbolt' => 'payment-cancelled' );
 
 		if( isset( $_GET['redirect_to'] ) ) {
 			$redirect_to = urldecode( $_GET['redirect_to'] );
@@ -647,6 +647,13 @@ class bbBolt_Server {
 				background: #ECF4E8;
 				border: 1px solid #2C8A00;
 				padding: 0.2em 0.5em;
+			}
+			#bbb-registerform .submit {
+				border-color: transparent;
+			}
+			#bbb-registerform .submit input {
+				border: none transparent;
+				background: transparent none;
 			}
 			#bbb-registration {
 				padding: 5px 10px;
