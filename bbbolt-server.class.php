@@ -98,7 +98,11 @@ class bbBolt_Server {
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 
 		// Front-end elements
-		add_shortcode( 'bbbolt_registration_form', array( &$this, 'shortcode_registration_handler' ) );
+		add_shortcode( 'bbbolt_registration_page',    array( &$this, 'shortcode_registration_page_handler' ) );
+		add_shortcode( 'bbbolt_registration_form',    array( &$this, 'shortcode_registration_form_handler' ) );
+		add_shortcode( 'bbbolt_signup_complete',      array( &$this, 'shortcode_signup_complete_handler' ) );
+		add_shortcode( 'bbbolt_signup_cancelled',     array( &$this, 'shortcode_signup_cancelled_handler' ) );
+		add_shortcode( 'bbbolt_logged_in',            array( &$this, 'shortcode_logged_in_handler' ) );
 		add_shortcode( 'bbbolt_subscription_details', array( &$this, 'shortcode_subscription_details_handler' ) );
 
 		// Maybe enqueue necessary scripts for front end
@@ -889,28 +893,93 @@ SCRIPT;
 	/* SHORTCODE FUNCTIONS */
 
 
-	function shortcode_registration_handler( $attributes, $content = '' ) {
+	function shortcode_registration_page_handler( $attributes, $content = '' ) {
 		global $wp_query; 
 
 		extract( shortcode_atts( array(
-			'id' => 'bbbolt-registration-form',
+			'id' => 'bbbolt-registration-page',
 			'class' => '',
 		), $attributes ) );
 
 		$display = "<div id='$id' class='$class'>";
 
-		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'register-user' )
-			$display .= '<p class="message">' . __( 'Sign-up Complete!', 'bbbolt' ) . '</p>';
-		elseif( is_user_logged_in() )
-			$display .= '<p class="message">' . __( 'You are already registered and logged in.', 'bbbolt' ) . '</p>';
-		elseif( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'payment-cancelled' )
-			$display .= $this->payment_cancelled( get_permalink() );
-		else 
-			$display .= do_shortcode( $content ) . $this->get_registration_form( '', get_permalink() ) . $this->get_scripts();
+		$display .= do_shortcode( $content );
 
 		$display .= '</div>';
 
-		return apply_filters( 'bbbolt_registration_shortcode_content', $display, $attributes, $content );
+		return apply_filters( 'bbbolt_registration_page_shortcode_content', $display, $attributes, $content );
+	}
+
+
+	/**
+	 * Parse the content specified between the bbbolt_registration_form shortcode and return it as part of 
+	 * the content if a user is not logged in and in the middle of the signup process. 
+	 */
+	function shortcode_registration_form_handler( $attributes, $content = '' ) {
+		extract( shortcode_atts( array(
+			'id' => 'bbbolt-registration-form',
+			'class' => '',
+		), $attributes ) );
+
+		if( ! is_user_logged_in() && isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] != 'register-user' && $wp_query->query_vars['bbbolt'] != 'payment-cancelled' ) {
+			$display = "<div id='$id' class='$class'>";
+
+			$display .= do_shortcode( $content );
+
+			$display .= $this->get_registration_form( '', get_permalink() ) . $this->get_scripts();
+
+			$display .= '</div>';
+		} else {
+			$display = '';
+		}
+
+		return apply_filters( 'bbbolt_registration_form_shortcode_content', $display, $attributes, $content );
+	}
+
+
+	/**
+	 * Parse the content specified between the bbbolt_signup_complete shortcode and return it as part of 
+	 * the content if a user has just completed the sign-up process. 
+	 */
+	function shortcode_signup_complete_handler( $attributes, $content = '' ) {
+
+		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'register-user' )
+			$display = '<p class="message">' . __( 'Sign-up Complete!', 'bbbolt' ) . '</p>' . do_shortcode( $content );
+		else
+			$display = '';
+
+		return apply_filters( 'bbbolt_signup_complete_shortcode_content', $display, $attributes, $content );
+	}
+
+
+	/**
+	 * Parse the content specified between the bbbolt_signup_cancelled shortcode and return it as part of 
+	 * the content if a user has cancelled payment. 
+	 */
+	function shortcode_signup_cancelled_handler( $attributes, $content = '' ) {
+
+		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'payment-cancelled' )
+			$display = $this->payment_cancelled( get_permalink() ) . do_shortcode( $content );
+		else
+			$display = '';
+
+
+		return apply_filters( 'bbbolt_signup_cancelled_shortcode_content', $display, $attributes, $content );
+	}
+
+
+	/**
+	 * Parse the content specified between the bbbolt_logged_in shortcode and return it as part of the content if a user
+	 * is logged in. 
+	 */
+	function shortcode_logged_in_handler( $attributes, $content = '' ) {
+
+		if( is_user_logged_in() )
+			$display = do_shortcode( $content );
+		else
+			$display = '';
+
+		return apply_filters( 'bbbolt_logged_in_shortcode_content', $display, $attributes, $content );
 	}
 
 
