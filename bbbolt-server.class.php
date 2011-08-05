@@ -792,7 +792,6 @@ class bbBolt_Server {
 				$('#bbb-registerform p.submit input').fadeOut(200, function(){
 					$('<img class="loading" src="$loading_gif_url" />').hide().prependTo('#bbb-registerform p.submit').fadeIn();
 				});
-				var tid = setTimeout(hideLoader, 5000);
 				function hideLoader() {
 					if( dg.isOpen() ) {
 						$('#bbb-registerform .submit').fadeOut();
@@ -801,6 +800,7 @@ class bbBolt_Server {
 						tid = setTimeout(hideLoader, 5000);
 					}
 				}
+				var tid = setTimeout(hideLoader, 5000);
 				function abortTimer() { // to be called when you want to stop the timer
 				  clearTimeout(tid);
 				}
@@ -893,6 +893,9 @@ SCRIPT;
 	/* SHORTCODE FUNCTIONS */
 
 
+	/**
+	 * Mostly a wrapper for the shortcodes below.
+	 */
 	function shortcode_registration_page_handler( $attributes, $content = '' ) {
 		global $wp_query; 
 
@@ -905,6 +908,19 @@ SCRIPT;
 
 		$display .= do_shortcode( $content );
 
+		// Make sure each step of the sign-up process is accounted for
+		if( ! $this->contains_shortcode( 'bbbolt_registration_form', $content ) ) 
+			$display .= do_shortcode( '[bbbolt_registration_form]' );
+
+		if( ! $this->contains_shortcode( 'bbbolt_signup_complete', $content ) )
+			$display .= do_shortcode( '[bbbolt_signup_complete]' );
+
+		if( ! $this->contains_shortcode( 'bbbolt_signup_cancelled', $content ) )
+			$display .= do_shortcode( '[bbbolt_signup_cancelled]' );
+
+		if( ! $this->contains_shortcode( 'bbbolt_logged_in', $content ) )
+			$display .= do_shortcode( '[bbbolt_logged_in]' );
+
 		$display .= '</div>';
 
 		return apply_filters( 'bbbolt_registration_page_shortcode_content', $display, $attributes, $content );
@@ -916,12 +932,14 @@ SCRIPT;
 	 * the content if a user is not logged in and in the middle of the signup process. 
 	 */
 	function shortcode_registration_form_handler( $attributes, $content = '' ) {
+		global $wp_query; 
+
 		extract( shortcode_atts( array(
 			'id' => 'bbbolt-registration-form',
 			'class' => '',
 		), $attributes ) );
 
-		if( ! is_user_logged_in() && isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] != 'register-user' && $wp_query->query_vars['bbbolt'] != 'payment-cancelled' ) {
+		if( ! is_user_logged_in() && @$wp_query->query_vars['bbbolt'] != 'register-user' && @$wp_query->query_vars['bbbolt'] != 'payment-cancelled' ) {
 			$display = "<div id='$id' class='$class'>";
 
 			$display .= do_shortcode( $content );
@@ -942,11 +960,13 @@ SCRIPT;
 	 * the content if a user has just completed the sign-up process. 
 	 */
 	function shortcode_signup_complete_handler( $attributes, $content = '' ) {
+		global $wp_query; 
 
-		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'register-user' )
-			$display = '<p class="message">' . __( 'Sign-up Complete!', 'bbbolt' ) . '</p>' . do_shortcode( $content );
-		else
+		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'register-user' ){
+			$display = ( ! empty( $content ) ) ? do_shortcode( $content ) : '<p class="message">' . __( 'Sign-up Complete!', 'bbbolt' ) . '</p>';
+		} else {
 			$display = '';
+		}
 
 		return apply_filters( 'bbbolt_signup_complete_shortcode_content', $display, $attributes, $content );
 	}
@@ -957,12 +977,13 @@ SCRIPT;
 	 * the content if a user has cancelled payment. 
 	 */
 	function shortcode_signup_cancelled_handler( $attributes, $content = '' ) {
+		global $wp_query; 
 
-		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'payment-cancelled' )
-			$display = $this->payment_cancelled( get_permalink() ) . do_shortcode( $content );
-		else
+		if( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'payment-cancelled' ){
+			$display = ( ! empty( $content ) ) ? do_shortcode( $content ) : $this->payment_cancelled( get_permalink() );
+		} else {
 			$display = '';
-
+		}
 
 		return apply_filters( 'bbbolt_signup_cancelled_shortcode_content', $display, $attributes, $content );
 	}
@@ -975,7 +996,7 @@ SCRIPT;
 	function shortcode_logged_in_handler( $attributes, $content = '' ) {
 
 		if( is_user_logged_in() )
-			$display = do_shortcode( $content );
+			$display = ( ! empty( $content ) ) ? do_shortcode( $content ) : '<p class="message">' . __( 'You are logged in.', 'bbbolt' ) . '</p>';
 		else
 			$display = '';
 
@@ -999,10 +1020,15 @@ SCRIPT;
 	/**
 	 * Check if current page includes the bbBolt registration Shortcode
 	 */
-	function contains_shortcode(){
+	function contains_shortcode( $shortcode = 'bbbolt_registration_page', $content = '' ){
 		global $post;
 
-		if( is_object( $post ) && preg_match( '#\[ *bbbolt_registration_form([^\]])*\]#i', $post->post_content ) )
+		if( empty( $content ) && is_object( $post ) )
+			$content = $post->post_content;
+
+		$shortcode = str_replace( array( '[', ']' ), '', $shortcode );
+
+		if( strpos( $content, $shortcode ) !== false ) // Speed over accuracy
 			return true;
 		else
 			return false;
