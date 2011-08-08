@@ -88,11 +88,11 @@ class bbBolt_Server {
 
 		add_filter( 'query_vars', array( &$this, 'query_var' ) );
 
-		add_action( 'init', array( &$this, 'check_requirements' ), 11 );
-		add_action( 'init', array( &$this, 'flush_rules' ), 12 );
+		add_action( 'init',                   array( &$this, 'check_requirements' ), 11 );
+		add_action( 'init',                   array( &$this, 'flush_rules' ), 12 );
 		add_action( 'generate_rewrite_rules', array( &$this, 'add_rewrite_rules' ) );
-		add_action( 'template_redirect', array( &$this, 'request_handler' ), -1 );
-		add_filter( 'status_header', array( &$this, 'unset_404' ), 10, 4 );
+		add_action( 'template_redirect',      array( &$this, 'request_handler' ), -1 );
+		add_filter( 'status_header',          array( &$this, 'unset_404' ), 10, 4 );
 
 		// If bbBolt is installed, site admins must want users to be able to register
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
