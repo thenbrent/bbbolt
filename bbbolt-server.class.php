@@ -1121,7 +1121,7 @@ SCRIPT;
 	function flush_rules() {
 		$rules = get_option( 'rewrite_rules' );
 
-		if ( ! isset( $rules['bbbolt/(.+)'] ) ) {
+		if ( ! isset( $rules['bbbolt/(.*)'] ) ) {
 			global $wp_rewrite;
 			$wp_rewrite->flush_rules();
 		}
