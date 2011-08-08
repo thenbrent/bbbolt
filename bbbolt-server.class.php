@@ -1076,7 +1076,7 @@ SCRIPT;
 	 **/
 	function check_requirements(){
 
-		if( ! defined( 'BBP_VERSION' ) ) {
+		if( ! !class_exists( 'bbPress' ) ) {
 			require_once( ABSPATH . 'wp-admin/includes/plugin.php' );	// Need deactivate_plugins()
 			deactivate_plugins( $this->registering_plugin );
 			wp_die( sprintf( __( 'The %sbbPress plugin%s must be active for %sbbBolt%s to work its magic. bbBolt has been deactivated. %sInstall & activate bbPress%s', 'bbbolt' ), 
