@@ -884,8 +884,7 @@ SCRIPT;
 	function maybe_print_styles_scripts() {
 		if( $this->contains_shortcode() ) {
 			$this->print_styles();
-			wp_enqueue_script( 'jquery' );
-			wp_enqueue_script( 'strengthy', $this->get_dir_url() . '/js/jquery.plugins.js', array( 'jquery' ) );
+			wp_enqueue_script( 'bbbolt-plugins', $this->get_dir_url() . '/js/jquery.plugins.js', array( 'jquery' ) );
 		}
 	}
 
