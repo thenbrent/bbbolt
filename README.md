@@ -1,4 +1,4 @@
-# Subscription Drive Support for WordPress Plugins & Themes
+# Subscription Driven Support for WordPress Plugins & Themes
 
 Technically, bbBolt is a PHP library, but at heart, bbBolt is a solution for the overwhelming support that comes with releasing [WordPress Plugins and Themes](http://wordpress.org/extend/) for free.
 
@@ -30,12 +30,13 @@ The plugin should have the usual WordPress [Plugin header](http://codex.wordpres
 	 */
 
 	require_once( PATH_TO_BBBOLT . '/bbbolt-server.class.php' );
+	?>
 ```
 
 Once we have a plugin header and have included the bbBolt server class, we can create our bbBolt server using the `register_bbbolt_server()` function. 
 
 ```php
-	register_bbbolt_server( $name, $paypal_credentials, $args );
+	<?php register_bbbolt_server( $name, $paypal_credentials, $args ); ?>
 ```
 
 
@@ -43,7 +44,7 @@ Once we have a plugin header and have included the bbBolt server class, we can c
 
 To create a bbBolt Server, you must call `register_bbbolt_server()` function with at least two parameters.
 
-```php
+```
 	$name (string)(required) – the name of your plugin or support system
 	$paypal_credentials (array)(required) – an array containing your PayPal API credentials with the keys:
 		'username' (string)(required) – your PayPal API Username
@@ -58,6 +59,7 @@ You can call the register_bbbolt_server() function from any file in your plugin,
 For example:
 
 ```php
+	<?php 
 	function eg_register_test_server(){
 
 		$paypal_credentials = array(
@@ -69,6 +71,7 @@ For example:
 		register_bbbolt_server( 'test-server', $paypal_credentials );
 	}
 	add_action( 'init', 'eg_register_test_server' );
+	?>
 ```
 
 That's all that is required. Once we activate this plugin via the WordPress Plugin administration page, it will create a bbBolt Server which runs in test mode (using the PayPal Sandbox) and charges a $20/month subscription fee for registration. If you want to change the subscription price, set the Server to be live or configure it in a myriad of other ways, read on.
@@ -95,7 +98,7 @@ Once copied, remove the `example-client.php` and `example-server.php` files as t
 Now the files are in your plugin's directory, you must include them:
 
 ```php
-	require_once( 'bbbolt-client.class.php' );
+	<?php require_once( 'bbbolt-client.class.php' ); ?>
 ```
 
 ### Register a bbBolt Client
@@ -103,14 +106,14 @@ Now the files are in your plugin's directory, you must include them:
 The bbBolt Client class file includes a helper function for registering a new client.
 
 ```php
-	register_bbbolt_client( $name, $args );
+	<?php register_bbbolt_client( $name, $args ); ?>
 ```
 
 To create your bbBolt client, you must call this function and pass it two parameters: `$name` & `$args`.
 
 #### Parameters
 
-```php
+```
 	$name (string)(required) – the name of your plugin or the name of the
 	$args (array) – an array of named arguments including:
 		‘site_url’ (string)(required) – the URL which includesthe URL of your plugin’s website.
@@ -122,12 +125,14 @@ You can call this function from any file in your plugin, but it must be called f
 For example:
 
 ```php
+	<?php 
 	function eg_register_bbbolt_client(){
 		$plugin_name = "My Plugin's Name";
 		$args = array( 'site_url' => 'http://demo.bbbolt.org/' );
 		register_bbbolt_client( $plugin_name, $args );
 	}
 	add_action( 'init', 'eg_register_yet_another_client' );
+	?>
 ```
 
 This code is similar to that in the example-clients.php file.
