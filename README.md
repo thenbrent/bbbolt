@@ -133,3 +133,7 @@ For example:
 This code is similar to that in the example-clients.php file.
 
 Once you have called this function, your client is setup and ready for interaction with your bbBolt Server.
+
+## Online Documentation
+
+For more information about bbBolt and documentation on configuring additional options, refer to the [bbBolt Codex](http://codex.bbbolt.org).
