@@ -8,6 +8,7 @@ bbBolt manages subscriptions through [PayPal](https://merchant.paypal.com/cgi-bi
 
 To use bbBolt you need both a bbBolt Server and a bbBolt Client. 
 
+*bbBolt is still very much in beta, but it does work and will be finding its way into a few public plugins very soon.*
 
 ## Creating a bbBolt Server
 
