@@ -994,7 +994,8 @@ SCRIPT;
 	 */
 	function shortcode_logged_in_handler( $attributes, $content = '' ) {
 
-		if( is_user_logged_in() )
+		// User is logged in and has not just completed the sign-up process
+		if( is_user_logged_in() && ! ( isset( $wp_query->query_vars['bbbolt'] ) && $wp_query->query_vars['bbbolt'] == 'register-user' ) )
 			$display = ( ! empty( $content ) ) ? do_shortcode( $content ) : '<p class="message">' . __( 'You are logged in.', 'bbbolt' ) . '</p>';
 		else
 			$display = '';
