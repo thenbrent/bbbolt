@@ -908,6 +908,9 @@ SCRIPT;
 		$display .= do_shortcode( $content );
 
 		// Make sure each step of the sign-up process is accounted for
+		if( ! $this->contains_shortcode( 'bbbolt_subscription_details', $content ) ) 
+			$display .= do_shortcode( '[bbbolt_subscription_details]' );
+
 		if( ! $this->contains_shortcode( 'bbbolt_registration_form', $content ) ) 
 			$display .= do_shortcode( '[bbbolt_registration_form]' );
 
@@ -1004,13 +1007,35 @@ SCRIPT;
 	}
 
 
-	function shortcode_subscription_details_handler( $attributes ) {
+	/**
+	 * Output a description of the subscription, optionally within enclosed content using {$variables} to represent
+	 * string parameters.
+	 */
+	function shortcode_subscription_details_handler( $attributes, $content = '' ) {
+
 		extract( shortcode_atts( array(
-			'id' => 'bbbolt-subscription-detail',
+			'id' => 'bbbolt-subscription-details',
 			'class' => '',
 		), $attributes ) );
 
-		return "<div id='$id' class='$class'>" . $this->get_subscription_details() . "</div>";
+		if( ! empty( $content ) ) {
+			foreach( $this->subscription as $detail => $value ) {
+
+				if( in_array( $detail, array( 'amount', 'initial_amount', 'trial_amount' ) ) ) // Prefix a currency symbol to currency items
+					$value = $this->paypal->get_currency_symbol() . $value;
+
+				$content = str_replace( '{$'.$detail.'}', $value, $content );
+			}
+
+			$content = do_shortcode( $content );
+
+		} else {
+
+			$content = "<div id='$id' class='$class'>" . $this->get_subscription_details() . "</div>";
+
+		}
+
+		return $content;
 	}
 
 
