@@ -1024,6 +1024,9 @@ SCRIPT;
 				if( in_array( $detail, array( 'amount', 'initial_amount', 'trial_amount' ) ) ) // Prefix a currency symbol to currency items
 					$value = $this->paypal->get_currency_symbol() . $value;
 
+				if( is_string( $value ) )
+					$value = strtolower( $value );
+
 				$content = str_replace( '{$'.$detail.'}', $value, $content );
 			}
 
