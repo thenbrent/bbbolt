@@ -68,9 +68,25 @@ class bbBolt_Server {
 			)
 		);
 
-		$args = wp_parse_args( $args, $defaults );
+		// Fill out defaults (can't use array_merge_recursive because it merges arrays have the same string keys into a new array)
+		if( isset( $args['labels'] ) && is_array( $args['labels'] ) )
+			$args['labels'] = array_merge( $defaults['labels'], $args['labels'] );
+		else
+			$args['labels'] = $defaults['labels'];
 
-		if( empty( $args['registering_plugin'] ) ){ // Get the handle fo the calling plugin
+		if( isset( $args['paypal']['subscription'] ) && is_array( $args['paypal']['subscription'] ) )
+			$args['paypal']['subscription'] = array_merge( $defaults['paypal']['subscription'], $args['paypal']['subscription'] );
+		else
+			$args['paypal']['subscription'] = $defaults['paypal']['subscription'];
+
+		if( isset( $args['paypal'] ) && is_array( $args['paypal'] ) )
+			$args['paypal'] = array_merge( $defaults['paypal'], $args['paypal'] );
+		else
+			$args['paypal'] = $defaults['paypal'];
+
+		$args =  array_merge( $defaults, $args );
+
+		if( empty( $args['registering_plugin'] ) ){ // Get the handle for the calling plugin
 			$backtrace = debug_backtrace();
 			$args['registering_plugin'] = basename( dirname( $backtrace[1]['file'] ) ) . '/' . basename( $backtrace[1]['file'] );
 		}
