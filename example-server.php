@@ -22,7 +22,11 @@ function eg_register_bbbolt_server(){
 			'signature' => 'AFnwAcqRkyW0yPYgkjqTkIGqPbSfAyVFbnFAjXCRltVZFzlJyi2.HbxW'
 		);
 
-		register_bbbolt_server( 'bbb-test-server', $paypal_credentials );
+		$args['paypal']['subscription']['amount'] = 5.90;
+		$args['paypal']['subscription']['initial_amount'] = 29.00; 
+
+		register_bbbolt_server( 'bbb-test-server', $paypal_credentials, $args );
 	}	
 }
 add_action( 'init', 'eg_register_bbbolt_server' );
+
