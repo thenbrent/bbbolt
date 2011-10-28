@@ -91,8 +91,6 @@ class bbBolt_Server {
 			$args['registering_plugin'] = basename( dirname( $backtrace[1]['file'] ) ) . '/' . basename( $backtrace[1]['file'] );
 		}
 
-		error_log('args = ' . print_r( $args, true ));
-
 		$this->name               = sanitize_key( $name );
 		$this->site_url           = $args['site_url'];
 		$this->labels             = (object)$args['labels'];
