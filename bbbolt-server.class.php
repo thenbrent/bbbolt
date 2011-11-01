@@ -222,12 +222,12 @@ class bbBolt_Server {
 		?>
 		<div id="register-container">
 			<ol id="register-progress">
-				<li id="register-step"<?php if( ! isset( $_GET['return'] ) ) echo 'class="current"'; ?>>1. Registration</li>
-				<li id="payment-step"<?php if( isset( $_GET['return'] ) ) echo 'class="current"'; ?>>2. Payment</li>
-				<li id="post-step">3. Post a Question</li>
+				<li id="register-step"<?php if( ! isset( $_GET['return'] ) ) echo 'class="current"'; ?>><?php _e( '1. Registration', 'bbbolt' ); ?></li>
+				<li id="payment-step"<?php if( isset( $_GET['return'] ) ) echo 'class="current"'; ?>><?php _e( '2. Payment', 'bbbolt' ); ?></li>
+				<li id="post-step"><?php _e( '3. Post a Question', 'bbbolt' ); ?></li>
 			</ol>
 
-			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over the future of %s.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
+			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over its future.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
 			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirected to PayPal to authorise this subscription.', 'bbbolt' ) ); ?></p>
 			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->get_subscription_details() ); ?></p>
 			<?php $this->registration_form(); ?>
