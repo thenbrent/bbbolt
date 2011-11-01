@@ -169,7 +169,7 @@ class bbBolt_Server {
 		} elseif( $wp_query->query_vars['bbbolt'] == 'checkout' ) {
 
 			if( ! wp_verify_nonce( $_POST['bbb-nonce'], __FILE__ ) ) 
-				die( 'Nonce Security Check Failed. Please try again or contact the site administrator.' );
+				wp_die( 'Nonce Security Check Failed. Please try again or contact the site administrator.' );
 
 			// Redirect the current user back to the same page they registered on
 			if( ! empty( $_POST['redirect_to'] ) ) {
@@ -267,7 +267,7 @@ class bbBolt_Server {
 			unset( $user_credentials['password'] );
 			$this->registration_form( $user_credentials );
 			$this->get_footer();
-			exit;
+			wp_die("Error: $bbb_message");
 		}
 
 		// Log the new user in
