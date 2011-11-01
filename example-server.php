@@ -28,5 +28,5 @@ function eg_register_bbbolt_server(){
 		register_bbbolt_server( 'bbb-test-server', $paypal_credentials, $args );
 	}	
 }
-add_action( 'init', 'eg_register_bbbolt_server' );
+add_action( 'init', 'eg_register_bbbolt_server', 12 );
 
