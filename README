@@ -1,0 +1,18 @@
+This branch of the bbBolt Git Repo offers a neat version specifically designed to ship with your plugin or theme.
+
+To use this branch as a Git submodule in your plugin or theme's repository, use the following command:
+
+	# Add the bbBolt Library as a submodule
+	git submodule add git://github.com/thenbrent/bbbolt.git bbbolt
+
+	# Set the submodule to use the submodule branch
+	cd bbbolt
+	git checkout -b submodule origin/submodule
+
+When cloning your plugin or theme's git repo, be sure to specify the --recursive option to include the bbBolt submodule. 
+
+	# Clone my plugin and all submodules
+	git clone --recursive git://github.com/username/plugin-name.git 
+
+The full reference for this library can be found here: https://github.com/thenbrent/bbbolt
+

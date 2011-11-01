@@ -179,7 +179,7 @@ class bbBolt_Server {
 			}
 
 			// Store the users credentials for 30 minutes (also requests a Token from PayPal).
-			set_transient( $this->paypal->token(), array( 'username' => $_POST['bbb-username'], 'password' => $this->encrypt( $_POST['bbb-password'] ), 'email' => $_POST['bbb-email'] ), 60 * 30 );
+			set_transient( $this->paypal->token(), array( 'email' => $_POST['bbb-email'], 'password' => $this->encrypt( $_POST['bbb-password'] ) ), 60 * 30 );
 
 			header( 'Location: ' . $this->paypal->get_checkout_url() );
 			exit();
@@ -258,7 +258,7 @@ class bbBolt_Server {
 		delete_transient( $this->paypal->token() );
 
 		// Create User
-		$user_id = wp_create_user( $user_credentials['username'], $user_credentials['password'], $user_credentials['email'] );
+		$user_id = wp_create_user( $user_credentials['email'], $user_credentials['password'], $user_credentials['email'] );
 
 		// Make sure the user was created successfully
 		if( is_wp_error( $user_id ) ) {
@@ -272,12 +272,12 @@ class bbBolt_Server {
 
 		// Log the new user in
 		wp_set_current_user( $user_id );
-		$user = wp_signon( array( 'user_login' => $user_credentials['username'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
+		$user = wp_signon( array( 'user_login' => $user_credentials['email'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
 
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
 
-		$bbb_message = sprintf( __( 'Thanks for signing up %s. Your account has been created.', 'bbbolt' ), $user_credentials['username'] );
+		$bbb_message = sprintf( __( 'Thanks for signing up. Your account has been created with the username %s.', 'bbbolt' ), $user_credentials['email'] );
 
 		return $user_id;
 	}
@@ -310,13 +310,9 @@ class bbBolt_Server {
 		if( is_user_logged_in() )
 			return sprintf( __( '%sYou are already registered and logged in.%s', 'bbbolt' ), '<p class="message">', '</p>' );
 
-		$credentials['username'] = ( isset( $credentials['username'] ) ) ? esc_attr( stripslashes( $credentials['username'] ) ) : '';
 		$credentials['email']    = ( isset( $credentials['email'] ) ) ? esc_attr( stripslashes( $credentials['email'] ) ) : '';
 
 		$form  = '<form name="bbb-registerform" id="bbb-registerform" action="" method="post">';
-
-		$form .= '<p><label>' . __( 'Username', 'bbbolt' ) . '</label>';
-		$form .= '<input type="text" name="bbb-username" id="bbb-username" class="input" size="25" tabindex="10" value="' . $credentials['username'] . '" /></p>';
 
 		$form .= '<p><label>' . __( 'E-mail', 'bbbolt' ) . '</label>';
 		$form .= '<input type="text" name="bbb-email" id="bbb-email" class="input" size="25" tabindex="20" value="' . $credentials['email'] . '"/></p>';
@@ -830,9 +826,7 @@ class bbBolt_Server {
 		function validate_form(){
 			var msg, status;
 			status = false;
-			if($('#bbb-username').val().length == 0 )
-				msg = 'You must enter a username.';
-			else if($('#bbb-email').val().length == 0 )
+			if($('#bbb-email').val().length == 0 )
 				msg = 'You must enter an email address.';
 			else if($('#bbb-password').val().length == 0 )
 				msg = 'You must enter a password.';
@@ -1180,15 +1174,6 @@ SCRIPT;
 		return $vars;
 	}
 
-
-	/**
-	 * Strips the string from an email that preceeds the @ character and sanitizes it. 
-	 */
-	function make_username_from_email( $email ){
-		$username = explode( '@', urldecode( $email ) );
-
-		return sanitize_user( $username[0] );
-	}
 
 	/**
 	 * Simple Encryption Function
