@@ -1031,8 +1031,15 @@ SCRIPT;
 		if( ! empty( $content ) ) {
 			foreach( $this->subscription as $detail => $value ) {
 
-				if( in_array( $detail, array( 'amount', 'initial_amount', 'trial_amount' ) ) ) // Prefix a currency symbol to currency items
+				if( in_array( $detail, array( 'amount', 'initial_amount', 'trial_amount' ) ) ) {
+
+					 // Force 2 decimal places if any decimals given
+					if( strpos( $value, '.' ) !== false )
+						$value = number_format( $value, 2 );
+
+					 // Prefix a currency symbol to currency items
 					$value = $this->paypal->get_currency_symbol() . $value;
+				}
 
 				if( is_string( $value ) )
 					$value = strtolower( $value );
