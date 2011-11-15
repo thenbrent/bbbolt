@@ -178,7 +178,7 @@ class bbBolt_Server {
 				$this->paypal->return_url = add_query_arg( $redirect_to, $this->paypal->return_url );
 			}
 
-			// Store the users credentials for 30 minutes (also requests a Token from PayPal).
+			// Store the user's credentials for 30 minutes (also requests a Token from PayPal).
 			set_transient( $this->paypal->token(), array( 'email' => $_POST['bbb-email'], 'password' => $this->encrypt( $_POST['bbb-password'] ) ), 60 * 30 );
 
 			header( 'Location: ' . $this->paypal->get_checkout_url() );
@@ -221,24 +221,22 @@ class bbBolt_Server {
 		global $wp_query, $bbb_message;
 		?>
 		<div id="register-container">
-			<ol id="register-progress">
-				<li id="register-step"<?php if( ! isset( $_GET['return'] ) ) echo 'class="current"'; ?>><?php _e( '1. Registration', 'bbbolt' ); ?></li>
-				<li id="payment-step"<?php if( isset( $_GET['return'] ) ) echo 'class="current"'; ?>><?php _e( '2. Payment', 'bbbolt' ); ?></li>
-				<li id="post-step"><?php _e( '3. Post a Question', 'bbbolt' ); ?></li>
-			</ol>
+
+			<?php $this->registration_progress_meter(); ?>
 
 			<p><?php printf( __( 'Sign-up to a support subscription with %s to get exclusive access to support and influence over its future.', 'bbbolt' ), $this->labels->name, $this->labels->name ); ?></p>
 			<p><?php printf( __( 'To sign-up, enter your account details below. You will then be redirected to PayPal to authorise this subscription.', 'bbbolt' ) ); ?></p>
 			<p><?php printf( __( 'Subscription: %s', 'bbbolt' ), $this->get_subscription_details() ); ?></p>
 			<?php $this->registration_form(); ?>
 
+			<?php $this->login_link(); ?>
+
 			<p id="already-member">
 				<?php _e( 'Already have an account?', 'bbbolt' ); ?>&nbsp;<a id="login-link" href="<?php echo site_url('wp-login.php', 'login') ?>" title="<?php _e( 'Login', 'bbbolt' ) ?>"><?php _e( 'Login here.', 'bbbolt' ) ?></a>
 			</p>
 		</div>
 
-		<?php $this->login_form(); ?>
-		<?php
+		<?php $this->login_form();
 	}
 
 
@@ -288,7 +286,7 @@ class bbBolt_Server {
 
 
 	/**
-	 * 
+	 * Outputs the default markup displayed when a new user cancels registration during the payment stage. 
 	 */
 	function payment_cancelled( $redirect_to = '' ){
 
@@ -304,6 +302,30 @@ class bbBolt_Server {
 
 
 	/* TEMPLATE FUNCTIONS */
+
+
+	/**
+	 * Returns the progress meter markup.
+	 */
+	function registration_progress_meter( $echo = true ) {
+		$progress_meter  = '<ol id="register-progress">';
+		$progress_meter .= '<li id="register-step"';
+		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= __( '1. Enter Details', 'bbbolt' ) . '</li>';
+		$progress_meter .= '<li id="payment-step"';
+		$progress_meter .= ( isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= __( '2. Authorize Payment', 'bbbolt' ) . '</li>';
+		$progress_meter .= '<li id="post-step">';
+		$progress_meter .= __( '3. Sign-up Complete', 'bbbolt' ) . '</li>';
+		$progress_meter .= '</ol>';
+
+		$login_link = apply_filters( 'bbbolt_progress_meter', $progress_meter );
+
+		if( $echo === true )
+			echo $progress_meter;
+
+		return $progress_meter;
+	}
 
 
 	/**
@@ -350,24 +372,45 @@ class bbBolt_Server {
 	/**
 	 * Outputs the HTML login form for the plugin's support page.
 	 **/
-	function login_form() { ?>
-		<div id="login-container" style="display:none;">
-			<h3><?php _e( 'Login', 'bbbolt' ); ?></h3>
-			<p><?php printf( __( 'Login to the %s support system.', 'bbbolt' ), $this->labels->name ); ?></p>
-			<?php wp_login_form( array( 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) ); ?>
-			<a id="forgot-link" href="<?php echo $this->get_url(); ?>" title="<?php _e('Password Lost and Found') ?>"><?php _e('Lost your password?') ?></a>
-		</div>
-		<div id="forgot-container" style="display:none;">
-			<form name="lostpasswordform" id="lostpasswordform" action="" method="post">
-				<p>
-					<label><?php _e('Username or E-mail:') ?><br />
-					<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" />
-				</p>
-			<?php do_action('lostpassword_form'); ?>
-				<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="<?php esc_attr_e('Get New Password'); ?>" tabindex="100" /></p>
-			</form>
-		</div>
-	<?php
+	function login_form( $echo = true ) {
+
+		$login_form  = '<div id="login-container" style="display:none;">';
+		$login_form .= '<h3>' . __( 'Login', 'bbbolt' ) . '</h3>';
+		$login_form .= '<p>' . sprintf( __( 'Login to the %s support system.', 'bbbolt' ), $this->labels->name ) . '</p>';
+		$login_form .= wp_login_form( array( 'echo' => false, 'label_username' => __( 'Email' ), 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) );
+		$login_form .= '<a id="forgot-link" href="' . $this->get_url() . '" title="' . __( 'Password Lost and Found', 'bbbolt' )  . '">' . __( 'Lost your password?', 'bbbolt' ) . '</a>';
+		$login_form .= '</div>';
+		$login_form .= '<div id="forgot-container" style="display:none;">';
+		$login_form .= '<form name="lostpasswordform" id="lostpasswordform" action="" method="post">';
+		$login_form .= '<p><label>' . __( 'E-mail Address:', 'bbbolt' ) . '<br />';
+		$login_form .= '<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" /></p>';
+		$login_form .= '<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="' . esc_attr( 'Get New Password' ) . '" tabindex="100" /></p>';
+		$login_form .= '</form>';
+		$login_form .= '</div>';
+
+		if( $echo === true )
+			echo $login_form;
+
+		return $login_form;
+	}
+
+
+	/**
+	 * Returns a link to the login page, optionally echoed. 
+	 */
+	function login_link( $echo = true ) {
+		$login_link  = '<p id="already-member">';
+		$login_link .= __( 'Already have an account?', 'bbbolt' ) . '&nbsp;';
+		$login_link .= '<a id="login-link" href="' . site_url( 'wp-login.php', 'login' ) . '" title="' . __( 'Login', 'bbbolt' ) . '">';
+		$login_link .= __( 'Login here &raquo;', 'bbbolt' ) . '</a>';
+		$login_link .= '</p>';
+
+		$login_link = apply_filters( 'bbbolt_login_link', $login_link );
+
+		if( $echo === true )
+			echo $login_link;
+
+		return $login_link;
 	}
 
 
@@ -704,7 +747,7 @@ class bbBolt_Server {
 				display: inline-block;
 				font-size: 12px;
 				position: relative;
-				padding: 0.5em 1em 0.4em;
+				padding: 0.5em 1em 0.4em 2.2em;
 				border: 1px solid #CCC;
 				color: #AFAFAF;
 				-webkit-border-radius:0.2em;
@@ -713,6 +756,7 @@ class bbBolt_Server {
 				margin-right:1.2em;
 				text-align: center;
 				width: auto;
+				line-height: 15px;
 			}
 			#welcome-step:before, #payment-step:before, 
 			#register-step:before {
@@ -955,14 +999,27 @@ SCRIPT;
 			'class' => '',
 		), $attributes ) );
 
-		if( ! is_user_logged_in() && @$wp_query->query_vars['bbbolt'] != 'register-user' && @$wp_query->query_vars['bbbolt'] != 'payment-cancelled' ) {
+		if( ! is_user_logged_in() && ( ! isset( $wp_query->query_vars['bbbolt'] ) || ( $wp_query->query_vars['bbbolt'] != 'register-user' && $wp_query->query_vars['bbbolt'] != 'payment-cancelled' ) ) ) {
 			$display = "<div id='$id' class='$class'>";
+
+			$display .= '<div id="register-container">'; // Required for JS animations
 
 			$display .= do_shortcode( $content );
 
+			if( ! $this->contains_shortcode( 'bbbolt_registration_progress_meter', $content ) ) 
+				$display .= $this->registration_progress_meter( false );
+
 			$display .= $this->get_registration_form( '', get_permalink() ) . $this->get_scripts();
 
-			$display .= '</div>';
+			if( ! $this->contains_shortcode( 'bbbolt_login_link', $content ) ) 
+				$display .= $this->login_link( false );
+
+			$display .= '</div>'; // End #register-container
+
+			if( ! $this->contains_shortcode( 'bbbolt_login_form', $content ) ) 
+				$display .= $this->login_form( false );
+
+			$display .= '</div>'; // End #bbbolt-registration-form
 		} else {
 			$display = '';
 		}
@@ -1204,7 +1261,7 @@ SCRIPT;
 		  }
 		}
 
-		return trim( $encrypted_text );
+		return trim( base64_encode( $encrypted_text ) );
 	}
 
 	/**
@@ -1213,6 +1270,8 @@ SCRIPT;
 	function decrypt( $text ) {
 		if( !defined( 'BBBOLT_KEY' ) )
 			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
+
+		$text = base64_decode( $text );
 
 		if( function_exists( 'mcrypt_ecb' ) ){
 			$decrypted_text = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) );
