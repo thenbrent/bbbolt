@@ -1204,7 +1204,7 @@ SCRIPT;
 		  }
 		}
 
-		return trim( base64_encode( $encrypted_text ) );
+		return trim( $encrypted_text );
 	}
 
 	/**
@@ -1213,8 +1213,6 @@ SCRIPT;
 	function decrypt( $text ) {
 		if( !defined( 'BBBOLT_KEY' ) )
 			define( 'BBBOLT_KEY',  substr( AUTH_KEY, 0, mcrypt_module_get_algo_key_size( MCRYPT_RIJNDAEL_256 ) ) );
-
-		$text = base64_decode( $text );
 
 		if( function_exists( 'mcrypt_ecb' ) ){
 			$decrypted_text = trim( mcrypt_decrypt( MCRYPT_RIJNDAEL_256, BBBOLT_KEY, $text, MCRYPT_MODE_ECB, mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB ), MCRYPT_RAND ) ) );
