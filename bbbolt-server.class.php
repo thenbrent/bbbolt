@@ -265,6 +265,7 @@ class bbBolt_Server {
 			$bbb_message = $user_id->get_error_message();
 			$this->get_header();
 			unset( $user_credentials['password'] );
+			//get_permalink()
 			$this->registration_form( $user_credentials );
 			$this->get_footer();
 			wp_die("Error: $bbb_message");
@@ -812,11 +813,11 @@ class bbBolt_Server {
 						$('#bbb-registerform .submit').fadeOut();
 						abortTimer();
 					} else {
-						tid = setTimeout(hideLoader, 5000);
+						tid = setTimeout(hideLoader, 7500);
 					}
 				}
-				var tid = setTimeout(hideLoader, 5000);
-				function abortTimer() { // to be called when you want to stop the timer
+				var tid = setTimeout(hideLoader, 7500);
+				function abortTimer() {
 				  clearTimeout(tid);
 				}
 				return true;
@@ -1204,7 +1205,7 @@ SCRIPT;
 		}
 
 		return trim( base64_encode( $encrypted_text ) );
-	} 
+	}
 
 	/**
 	 * Simple Decryption Function
@@ -1244,47 +1245,50 @@ SCRIPT;
 	 * Similar to the @see wp_new_user_notification function.
 	 */
 	function new_user_notifications( $user_id ) {
-		$user = new WP_User( $user_id );
-		$admin_user = new WP_User( $this->get_admin_user_id() );
+		$new_user   = new WP_User( $user_id );
+		$admin_user = new WP_User( bbb_get_admin_user_id() );
 
-		$user_login = stripslashes( $user->user_login );
-		$user_email = stripslashes( $user->user_email );
+		$new_user->user_login = stripslashes( $new_user->user_login );
+		$new_user->user_email = stripslashes( $new_user->user_email );
 
 		$sitename = wp_specialchars_decode( $this->labels->name, ENT_QUOTES );
 
-		$message  = sprintf( __( 'New user registration for %s:' ), $sitename ) . "\r\n\r\n";
-		$message .= sprintf( __( 'Username: %s' ), $user_login ) . "\r\n\r\n";
+
+		// Email to Site Admin
+
+		$message  = sprintf( __( 'New user registration for %s:', 'bbbolt' ), $sitename ) . "\r\n\r\n";
+		$message .= sprintf( __( 'Username: %s', 'bbbolt' ), $new_user->user_login ) . "\r\n\r\n";
 
 		@wp_mail( get_option( 'admin_email' ), sprintf( __('[%s] New User Registration' ), $sitename ), $message );
 
-		$message  = sprintf( __( 'Thanks for signing up with %s!' ), $sitename ) . "\r\n\r\n";
-		$message .= sprintf( __( 'Your account details are:' ) ) . "\r\n\r\n";
-		$message .= sprintf( __( 'Username: %s' ), $user_login ) . "\r\n";
-		$message .= sprintf( __( 'Password: The password you chose during registration. ' ) ) . "\r\n\r\n";
 
-		$message .= sprintf( __( 'You can login at: %s' ), wp_login_url() ) . "\r\n\r\n";
+		// Email to New User
+
+		$subject  = sprintf( __( 'Welcome to %s', 'bbbolt' ), $sitename );
+
+		$message  = sprintf( __( 'Thanks for signing up with %s!', 'bbbolt' ), $sitename ) . "\r\n\r\n";
+		$message .= 		 __( 'Your account details are:', 'bbbolt' ) . "\r\n\r\n";
+		$message .= sprintf( __( 'Username: %s', 'bbbolt' ), $new_user->user_login ) . "\r\n";
+		$message .= 		 __( 'Password: The password you chose during registration. ', 'bbbolt' ) . "\r\n\r\n";
+
+		$message .= sprintf( __( 'You can login at: %s', 'bbbolt' ), wp_login_url() ) . "\r\n\r\n";
 
 		if( $forum_url = get_post_type_archive_link( apply_filters( 'bbp_forum_post_type', 'forum' ) ) )
-			$message .= sprintf( __( 'Get support at: %s' ), $forum_url ) . "\r\n\r\n";
+			$message .= sprintf( __( 'Get support at: %s', 'bbbolt' ), $forum_url ) . "\r\n\r\n";
 
-		$message .= sprintf( __( 'You should receive another email from PayPal with the details of your subscription.' ) ) . "\r\n\r\n";
+		$message .= 		 __( 'You should receive another email from PayPal with the details of your subscription.', 'bbbolt' ) . "\r\n\r\n";
 
-		$message .= sprintf( __( 'Kind regards,' ) ) . "\r\n\r\n";
-		$message .= sprintf( __( '%s @ %s' ), $admin_user->display_name, $sitename ) . "\r\n\r\n";
+		$message .= 		 __( 'Kind regards,', 'bbbolt' ) . "\r\n\r\n";
+		$message .= sprintf( __( '%s @ %s', 'bbbolt' ), $admin_user->display_name, $sitename ) . "\r\n\r\n";
 
-		wp_mail( $user_email, sprintf( __('[%s] Your username and password'), $sitename ), $message );
+		$headers = sprintf( __( 'From: "%s" <%s>', 'bbbolt' ), $sitename, get_site_option( 'admin_email' ) );
 
-	}
+		$subject = apply_filters( 'bbb_new_user_notification_subject', $subject, $new_user, $admin_user, $sitename );
+		$message = apply_filters( 'bbb_new_user_notification_message', $message, $new_user, $admin_user, $sitename );
+		$headers = apply_filters( 'bbb_new_user_notification_headers', $headers, $new_user, $admin_user, $sitename );
 
-	/**
-	 * Returns the ID of the first admin user it finds. 
-	 */
-	function get_admin_user_id() {
-		global $wpdb;
+		@wp_mail( $new_user->user_email, $subject, $message, $headers );
 
-		$id = $wpdb->get_var( "SELECT $wpdb->users.ID FROM $wpdb->users WHERE (SELECT $wpdb->usermeta.meta_value FROM $wpdb->usermeta WHERE $wpdb->usermeta.user_id = wp_users.ID AND $wpdb->usermeta.meta_key = 'wp_capabilities') LIKE '%administrator%'" );
-
-		return apply_filters( 'bbbolt_admin_user_id', $id );
 	}
 
 }
@@ -1310,3 +1314,16 @@ function register_bbbolt_server( $name, $paypal_credentials, $args = array() ){
 	$bbbolt_server = new $bbbolt_server_class( $name, $paypal_credentials, $args );
 }
 endif;
+
+
+/**
+ * Returns the ID of the first admin user it finds. 
+ */
+function bbb_get_admin_user_id() {
+	global $wpdb;
+
+	$id = $wpdb->get_var( "SELECT $wpdb->users.ID FROM $wpdb->users WHERE (SELECT $wpdb->usermeta.meta_value FROM $wpdb->usermeta WHERE $wpdb->usermeta.user_id = wp_users.ID AND $wpdb->usermeta.meta_key = 'wp_capabilities') LIKE '%administrator%'" );
+
+	return apply_filters( 'bbbolt_admin_user_id', $id );
+}
+
