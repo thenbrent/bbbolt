@@ -377,7 +377,7 @@ class bbBolt_Server {
 		$login_form  = '<div id="login-container" style="display:none;">';
 		$login_form .= '<h3>' . __( 'Login', 'bbbolt' ) . '</h3>';
 		$login_form .= '<p>' . sprintf( __( 'Login to the %s support system.', 'bbbolt' ), $this->labels->name ) . '</p>';
-		$login_form .= wp_login_form( array( 'echo' => false, 'label_username' => __( 'Email' ), 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) );
+		$login_form .= wp_login_form( array( 'echo' => false, 'redirect' => esc_url( $_SERVER['REQUEST_URI'] ) ) );
 		$login_form .= '<a id="forgot-link" href="' . $this->get_url() . '" title="' . __( 'Password Lost and Found', 'bbbolt' )  . '">' . __( 'Lost your password?', 'bbbolt' ) . '</a>';
 		$login_form .= '</div>';
 		$login_form .= '<div id="forgot-container" style="display:none;">';
