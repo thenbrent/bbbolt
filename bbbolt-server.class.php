@@ -1,8 +1,16 @@
 <?php
+/*
+ * bbBolt Server
+ * 
+ * This class creates an bbBolt server to manage sign-ups, bbPress publishing and other 
+ * server functions. 
+ * 
+ * Version: beta-1
+ **/
 
 if( ! class_exists( 'bbBolt_Server' ) ) :
 
-require_once('paypal/paypal-digital-goods.class.php');
+require_once( 'paypal/paypal-digital-goods.class.php' );
 
 /**
  * The bbBolt Server Work Engine
@@ -272,6 +280,11 @@ class bbBolt_Server {
 		// Log the new user in
 		wp_set_current_user( $user_id );
 		$user = wp_signon( array( 'user_login' => $user_credentials['email'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
+
+		// Set the user's nickname and display name to something other than their email address
+		$display_name = substr( $user_credentials['email'], 0, strpos( $user_credentials['email'], '@') );
+		wp_update_user( array( 'ID' => $user_id, 'user_nicename' => $display_name, 'display_name' => $display_name ) );
+		update_user_meta( $user_id, 'nickname', $display_name );
 
 		// Notify the site admin & new user
 		$this->new_user_notifications( $user_id );
