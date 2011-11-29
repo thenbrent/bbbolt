@@ -118,6 +118,10 @@ class bbBolt_Server {
 		add_action( 'template_redirect',      array( &$this, 'request_handler' ), -1 );
 		add_filter( 'status_header',          array( &$this, 'unset_404' ), 10, 4 );
 
+		// Manage subscriptions
+		add_action( 'bbbolt_21_days_since_subscription', array( &$this, 'subscription_reminder' ), 10, 2 );
+		add_action( 'bbbolt_30_days_since_subscription', array( &$this, 'check_profile' ), 10, 2 );
+
 		// If bbBolt is installed, site admins must want users to be able to register
 		add_filter( 'option_users_can_register', array( &$this, 'users_can_register_override' ), 100 );
 
@@ -150,8 +154,10 @@ class bbBolt_Server {
 		if( ! isset( $wp_query->query_vars['bbbolt'] ) )
 			return;
 
-		if( $wp_query->query_vars['bbbolt'] == 'register-user' )
+		if( $wp_query->query_vars['bbbolt'] == 'register-user' && isset( $_GET['token'] ) ) {
 			$this->register_user();
+			wp_redirect( remove_query_arg( 'token' ) );
+		}
 
 		// Routing logic, doesn't work in a switch as nicely as one might think
 		if( isset( $_POST['bbb_topic_submit'] ) ) {
@@ -291,6 +297,10 @@ class bbBolt_Server {
 
 		// Store the user's Payment Profile ID 
 		update_user_meta( $user_id, 'paypal_payment_profile_id', urldecode( $response['PROFILEID'] ) );
+		update_user_meta( $user_id, 'paypal_payment_profile_start_date', urldecode( $response['PROFILESTARTDATE'] ) );
+
+		// Setup hooks to run at given intervals after subscription
+		$this->schedule_subscription_hooks( $response['PROFILEID'], $user_id );
 
 		$bbb_message = sprintf( __( 'Thanks for signing up. Your account has been created with the username %s.', 'bbbolt' ), $user_credentials['email'] );
 
@@ -1359,6 +1369,59 @@ SCRIPT;
 
 		@wp_mail( $new_user->user_email, $subject, $message, $headers );
 
+	}
+
+
+	/**
+	 * Checks a payment profile and if it is still active, sends an email to 
+	 * notify that the first payment will be made soon. 
+	 */
+	function subscription_reminder( $profile_id, $user_id ) {
+		if( ! is_profile_active( $profile_id ) ) {
+			// Remove user's role
+
+			// Notify user their account has been suspended
+			
+			// Remove future checks
+			
+			$timestamp = wp_next_scheduled( 'bbbolt_30_days_since_subscription' );
+		    wp_unschedule_event( $timestamp, 'bbbolt_30_days_since_subscription', array( $profile_id, $user_id ) );
+		} else {
+			// Notify user they will be billed monthy support subscription payment
+
+		}
+	}
+
+	/**
+	 * Checks a payment profile to make sure it is still active. 
+	 * 
+	 * If the profile has been cancelled, the user's role will be set to inactive.
+	 */
+	function check_profile( $profile_id, $user_id ) {
+		if( ! is_profile_active( $profile_id ) ) {
+			// Remove user's role
+
+			// Notify user their account has been suspended
+
+		} else {
+			// Schedule to check again in the future
+			$this->schedule_subscription_hooks( $profile_id, $user_id );
+		}
+	}
+
+
+	function is_profile_active( $profile_id ) {
+		$profile_details = $this->paypal->get_profile_details( $profile_id );
+		return ( $profile_details['STATUS'] == 'Active' ) ? true : false;
+	}
+
+
+	/**
+	 * Schedules wp-cron hooks for intervals on subscription
+	 */
+	function schedule_subscription_hooks( $profile_id, $user_id ) {
+		wp_schedule_single_event( time() + 60 * 60 * 24 * 21, 'bbbolt_21_days_since_subscription', array( $profile_id, $user_id ) );
+		wp_schedule_single_event( time() + 60 * 60 * 24 * 30, 'bbbolt_30_days_since_subscription', array( $profile_id, $user_id ) );
 	}
 
 }
