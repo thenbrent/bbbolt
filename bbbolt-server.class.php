@@ -275,6 +275,9 @@ class bbBolt_Server {
 		wp_set_current_user( $user_id );
 		$user = wp_signon( array( 'user_login' => $user_credentials['email'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
 
+		// Set a nicer display name for the user
+		wp_update_user( array( 'ID' => $user_id, 'display_name' => substr( $user_credentials['email'], 0, strpos( $user_credentials['email'], '@' ) ) ) );
+
 		// Notify the site admin & new user
 		$this->new_user_notifications( $user_id );
 
