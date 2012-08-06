@@ -181,6 +181,8 @@ class bbBolt_Server {
 			// Store the user's credentials for 30 minutes (also requests a Token from PayPal).
 			set_transient( $this->paypal->token(), array( 'email' => $_POST['bbb-email'], 'password' => $this->encrypt( $_POST['bbb-password'] ) ), 60 * 30 );
 
+			do_action( 'bbbolt_checkout', $_POST['bbb-email'] );
+
 			header( 'Location: ' . $this->paypal->get_checkout_url() );
 			exit();
 
