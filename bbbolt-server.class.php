@@ -434,7 +434,7 @@ class bbBolt_Server {
 	 */
 	function get_subscription_details(){
 
-		$subscription_details = apply_filters( 'bbbolt_subscription_details', $this->paypal->get_subscription_string(), &$this );
+		$subscription_details = apply_filters( 'bbbolt_subscription_details', $this->paypal->get_subscription_string(), $this );
 
 		return $subscription_details;
 	}
