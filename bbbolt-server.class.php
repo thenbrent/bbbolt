@@ -384,7 +384,7 @@ class bbBolt_Server {
 		$login_form .= '</div>';
 		$login_form .= '<div id="forgot-container" style="display:none;">';
 		$login_form .= '<form name="lostpasswordform" id="lostpasswordform" action="" method="post">';
-		$login_form .= '<p><label>' . __( 'E-mail Address:', 'bbbolt' ) . '<br />';
+		$login_form .= '<p><label for="user_login">' . __( 'E-mail Address:', 'bbbolt' ) . '</label><br />';
 		$login_form .= '<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" /></p>';
 		$login_form .= '<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="' . esc_attr( 'Get New Password' ) . '" tabindex="100" /></p>';
 		$login_form .= '</form>';
