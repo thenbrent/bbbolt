@@ -1,8 +1,16 @@
 <?php
+/*
+ * bbBolt Server
+ * 
+ * This class creates an bbBolt server to manage sign-ups, bbPress publishing and other 
+ * server functions. 
+ * 
+ * Version: beta-1
+ **/
 
 if( ! class_exists( 'bbBolt_Server' ) ) :
 
-require_once('paypal/paypal-digital-goods.class.php');
+require_once( 'paypal/paypal-digital-goods.class.php' );
 
 /**
  * The bbBolt Server Work Engine
@@ -275,8 +283,10 @@ class bbBolt_Server {
 		wp_set_current_user( $user_id );
 		$user = wp_signon( array( 'user_login' => $user_credentials['email'], 'user_password' => $user_credentials['password'], 'rememberme' => true ) );
 
-		// Set a nicer display name for the user
-		wp_update_user( array( 'ID' => $user_id, 'display_name' => substr( $user_credentials['email'], 0, strpos( $user_credentials['email'], '@' ) ) ) );
+		// Set the user's nickname and display name to something other than their email address
+		$display_name = substr( $user_credentials['email'], 0, strpos( $user_credentials['email'], '@') );
+		wp_update_user( array( 'ID' => $user_id, 'user_nicename' => $display_name, 'display_name' => $display_name ) );
+		update_user_meta( $user_id, 'nickname', $display_name );
 
 		// Notify the site admin & new user
 		$this->new_user_notifications( $user_id );
@@ -314,15 +324,15 @@ class bbBolt_Server {
 	 */
 	function registration_progress_meter( $echo = true ) {
 		$progress_meter  = '<ol id="register-progress">';
-		$progress_meter .= '<li id="register-step"';
+		$progress_meter .= "\n<li id='register-step'";
 		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? 'class="current">' : '>';
 		$progress_meter .= __( '1. Enter Details', 'bbbolt' ) . '</li>';
-		$progress_meter .= '<li id="payment-step"';
+		$progress_meter .= "\n<li id='payment-step'";
 		$progress_meter .= ( isset( $_GET['return'] ) ) ? 'class="current">' : '>';
 		$progress_meter .= __( '2. Authorize Payment', 'bbbolt' ) . '</li>';
-		$progress_meter .= '<li id="post-step">';
+		$progress_meter .= "\n<li id='post-step'>";
 		$progress_meter .= __( '3. Sign-up Complete', 'bbbolt' ) . '</li>';
-		$progress_meter .= '</ol>';
+		$progress_meter .= "\n</ol>";
 
 		$login_link = apply_filters( 'bbbolt_progress_meter', $progress_meter );
 
@@ -387,7 +397,7 @@ class bbBolt_Server {
 		$login_form .= '</div>';
 		$login_form .= '<div id="forgot-container" style="display:none;">';
 		$login_form .= '<form name="lostpasswordform" id="lostpasswordform" action="" method="post">';
-		$login_form .= '<p><label>' . __( 'E-mail Address:', 'bbbolt' ) . '<br />';
+		$login_form .= '<p><label>' . __( 'E-mail Address:', 'bbbolt' ) . '</label><br />';
 		$login_form .= '<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" /></p>';
 		$login_form .= '<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="' . esc_attr( 'Get New Password' ) . '" tabindex="100" /></p>';
 		$login_form .= '</form>';
@@ -426,7 +436,7 @@ class bbBolt_Server {
 	 */
 	function get_subscription_details(){
 
-		$subscription_details = apply_filters( 'bbbolt_subscription_details', $this->paypal->get_subscription_string(), &$this );
+		$subscription_details = apply_filters( 'bbbolt_subscription_details', $this->paypal->get_subscription_string(), $this );
 
 		return $subscription_details;
 	}

@@ -1,13 +1,15 @@
 <?php 
-
-
-if( ! class_exists( 'bbBolt_Client_UI' ) ) :
-/**
+/*
  * bbBolt UI Singleton
  * 
  * Every client needs an interface; however, most UI functions only need to be performed
  * once, so a singleton class is suitable and called in the bbBolt Client.
+ * 
+ * Version: beta-1
  **/
+
+if( ! class_exists( 'bbBolt_Client_UI' ) ) :
+
 class bbBolt_Client_UI {
 	private static $instance;
 
