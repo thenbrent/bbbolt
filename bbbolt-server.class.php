@@ -325,10 +325,10 @@ class bbBolt_Server {
 	function registration_progress_meter( $echo = true ) {
 		$progress_meter  = '<ol id="register-progress">';
 		$progress_meter .= "\n<li id='register-step'";
-		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? ' class="current">' : '>';
 		$progress_meter .= __( '1. Enter Details', 'bbbolt' ) . '</li>';
 		$progress_meter .= "\n<li id='payment-step'";
-		$progress_meter .= ( isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= ( isset( $_GET['return'] ) ) ? ' class="current">' : '>';
 		$progress_meter .= __( '2. Authorize Payment', 'bbbolt' ) . '</li>';
 		$progress_meter .= "\n<li id='post-step'>";
 		$progress_meter .= __( '3. Sign-up Complete', 'bbbolt' ) . '</li>';
@@ -355,10 +355,10 @@ class bbBolt_Server {
 
 		$form  = '<form name="bbb-registerform" id="bbb-registerform" action="" method="post">';
 
-		$form .= '<p><label>' . __( 'E-mail', 'bbbolt' ) . '</label>';
+		$form .= '<p><label for="bbb-email">' . __( 'E-mail', 'bbbolt' ) . '</label>';
 		$form .= '<input type="text" name="bbb-email" id="bbb-email" class="input" size="25" tabindex="20" value="' . $credentials['email'] . '"/></p>';
 
-		$form .= '<p><label>' . __( 'Password', 'bbbolt' ) . '</label>';
+		$form .= '<p><label for="bbb-password">' . __( 'Password', 'bbbolt' ) . '</label>';
 		$form .= '<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" /></p>';
 
 		$form .= '<p class="submit">';
@@ -397,7 +397,7 @@ class bbBolt_Server {
 		$login_form .= '</div>';
 		$login_form .= '<div id="forgot-container" style="display:none;">';
 		$login_form .= '<form name="lostpasswordform" id="lostpasswordform" action="" method="post">';
-		$login_form .= '<p><label>' . __( 'E-mail Address:', 'bbbolt' ) . '</label><br />';
+		$login_form .= '<p><label for="user_login">' . __( 'E-mail Address:', 'bbbolt' ) . '</label><br />';
 		$login_form .= '<input type="text" name="user_login" id="user_login" class="input" value="" size="20" tabindex="10" /></p>';
 		$login_form .= '<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="' . esc_attr( 'Get New Password' ) . '" tabindex="100" /></p>';
 		$login_form .= '</form>';
