@@ -312,10 +312,10 @@ class bbBolt_Server {
 	function registration_progress_meter( $echo = true ) {
 		$progress_meter  = '<ol id="register-progress">';
 		$progress_meter .= '<li id="register-step"';
-		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= ( ! isset( $_GET['return'] ) ) ? ' class="current">' : '>';
 		$progress_meter .= __( '1. Enter Details', 'bbbolt' ) . '</li>';
 		$progress_meter .= '<li id="payment-step"';
-		$progress_meter .= ( isset( $_GET['return'] ) ) ? 'class="current">' : '>';
+		$progress_meter .= ( isset( $_GET['return'] ) ) ? ' class="current">' : '>';
 		$progress_meter .= __( '2. Authorize Payment', 'bbbolt' ) . '</li>';
 		$progress_meter .= '<li id="post-step">';
 		$progress_meter .= __( '3. Sign-up Complete', 'bbbolt' ) . '</li>';
