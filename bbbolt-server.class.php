@@ -342,10 +342,10 @@ class bbBolt_Server {
 
 		$form  = '<form name="bbb-registerform" id="bbb-registerform" action="" method="post">';
 
-		$form .= '<p><label>' . __( 'E-mail', 'bbbolt' ) . '</label>';
+		$form .= '<p><label for="bbb-email">' . __( 'E-mail', 'bbbolt' ) . '</label>';
 		$form .= '<input type="text" name="bbb-email" id="bbb-email" class="input" size="25" tabindex="20" value="' . $credentials['email'] . '"/></p>';
 
-		$form .= '<p><label>' . __( 'Password', 'bbbolt' ) . '</label>';
+		$form .= '<p><label for="bbb-password">' . __( 'Password', 'bbbolt' ) . '</label>';
 		$form .= '<input type="password" name="bbb-password" id="bbb-password" class="input" value="" size="25" tabindex="30" /></p>';
 
 		$form .= '<p class="submit">';
